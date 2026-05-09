@@ -1,1187 +1,291 @@
-import { useState, useEffect, useRef } from "react";
-
-// ── Cargo data extracted from Base sheet ──────────────────────────────────
-const CARGO_DATA = {
-  "ANALISTA DE GESTAO": { salario: 9626, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ANALISTA DE GESTÃO": { salario: 8000, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ANALISTA GESTÃO": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ANALISTA TECNICO": { salario: 8000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "ANALISTA ADMINISTRATIVO": { salario: 5400, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "ASSESSOR DA PRESIDENCIA": { salario: 14800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ASSESSOR DE DIRETORIA": { salario: 12800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ASSESSOR DE INSTANCIA": { salario: 12800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ASSESSOR DE UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ASSESSOR UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ASSESSOR ESPECIALISTA": { salario: 17700, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "ASSESSOR SI": { salario: 11000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "AUXILIAR DE GESTAO": { salario: 4000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "AUXILIAR DE GESTÃO": { salario: 3000, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "CHEFE DE GABINETE": { salario: 18869, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "COORDENADOR": { salario: 14800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "COORDENADOR DE PROJETO": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "COORDENADOR DE REGIONAL": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "COORDENADOR INTERFEDERATIVO": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "DIRETOR": { salario: 33546, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "DIRETOR PRESIDENTE": { salario: 36690, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "GESTOR EXECUTIVO": { salario: 23063, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "GESTOR DE PROJETOS": { salario: 18869, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ASSISTENTE DE PROJETO": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ASSISTENTE DE UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "PSICOLOGO AGENCIA": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "AGENTE DE PROJETO": { salario: 4000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "APRENDIZ": { salario: 1000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ENGENHEIRO DE SEGURANCA DO TRABALHO": { salario: 6439, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-  "ADVOGADO": { salario: 10800, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "CONTADOR": { salario: 7060, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "ADMINISTRADOR": { salario: 7060, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "ASSISTENTE ADMINISTRATIVO": { salario: 4800, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "AUXILIAR ADMINISTRATIVO": { salario: 2900, alimentacao: 950, bemEstar: 0, insalubridade: 162, periculosidade: 0 },
-  "ASSESSOR DE IMPRENSA": { salario: 5000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "PEDAGOGO": { salario: 7060, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "ENFERMEIRO": { salario: 7446, alimentacao: 1075, bemEstar: 400, insalubridade: 324, periculosidade: 0 },
-  "MEDICO": { salario: 15080, alimentacao: 1200, bemEstar: 800, insalubridade: 324, periculosidade: 0 },
-  "PSICOLOGO": { salario: 7060, alimentacao: 950, bemEstar: 0, insalubridade: 324, periculosidade: 0 },
-  "ENGENHEIRO CIVIL": { salario: 12903, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-  "ARQUITETO E URBANISTA": { salario: 12903, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-};
-
-// ── Org structure from PDF ────────────────────────────────────────────────
-const ORG_STRUCTURE = {
-  "Presidência (PRES)": {
-    units: ["Gabinete da Presidência (GAB)", "Secretaria Executiva e de Articulação (SEAR)", "Unidade de Integridade (UINT)", "Unidade Jurídica (UJUR)", "Unidade de Comunicação (UCOM)", "Unidade de Finanças, Orçamento, Contabilidade e Prestação de Contas (UFOC)", "Unidade de Planejamento e Gestão Estratégica (UPGE)"]
-  },
-  "Diretoria de Atenção Integral à Saúde (DAIS)": {
-    units: ["Unidade de Saúde Indígena (USI)", "Unidade de Atenção Primária à Saúde (UAPS)", "Unidade de Atenção Especializada (UAE)", "Unidade de Monitoramento e Avaliação (UMA)", "Unidade de Projetos e Inovação (UPI)", "Unidade de Ensino e Pesquisa (UEP)", "Unidade de Transformação Digital em Saúde (UDIGIS)"]
-  },
-  "Diretoria de Operações (DIOP)": {
-    units: ["Unidade de Gestão de Pessoas (UGP)", "Unidade de Aquisições e Contratos (UAC)", "Unidade de Logística, Suprimentos e Patrimônio (ULOG)", "Unidade de Infraestrutura (UINFRA)", "Unidade de Tecnologia da Informação e Comunicação (UTIC)"]
-  }
-};
-
-// ── Existing attributions from PDF for conflict check ────────────────────
-const EXISTING_ATTRIBUTIONS = [
-  { team: "AUDINT", attrs: ["auditorias internas", "avaliação independente", "controle interno", "governança", "riscos"] },
-  { team: "PREV", attrs: ["prevenção de irregularidades", "disciplina", "código de conduta", "ética", "apuração"] },
-  { team: "UJUR", attrs: ["assessoria jurídica", "contratos jurídicos", "processos judiciais", "legalidade", "representação judicial"] },
-  { team: "UCOM", attrs: ["comunicação", "imprensa", "mídias sociais", "identidade visual", "divulgação"] },
-  { team: "UFOC", attrs: ["finanças", "orçamento", "contabilidade", "prestação de contas", "tributário"] },
-  { team: "UPGE", attrs: ["planejamento estratégico", "gestão de riscos", "qualidade institucional", "monitoramento", "indicadores"] },
-  { team: "SEAR", attrs: ["articulação institucional", "escritórios regionais", "normativos internos", "governança interna"] },
-  { team: "UAC", attrs: ["aquisições", "compras", "contratos", "licitação", "pregão", "fornecedores"] },
-  { team: "UGP", attrs: ["gestão de pessoas", "folha de pagamento", "recrutamento", "seleção", "recursos humanos"] },
-  { team: "ULOG", attrs: ["logística", "suprimentos", "patrimônio", "viagens", "transporte"] },
-  { team: "UINFRA", attrs: ["infraestrutura", "obras", "manutenção predial", "arquitetura", "engenharia"] },
-  { team: "UTIC", attrs: ["tecnologia da informação", "sistemas de informação", "segurança da informação", "TIC", "dados"] },
-  { team: "USI", attrs: ["saúde indígena", "DSEI", "SESAI", "povos indígenas", "interculturalidade"] },
-  { team: "UAPS", attrs: ["atenção primária", "APS", "provimento médico", "emergências sanitárias"] },
-  { team: "UAE", attrs: ["atenção especializada", "credenciamento", "serviços especializados", "qualidade assistencial"] },
-  { team: "UMA", attrs: ["monitoramento e avaliação", "indicadores de saúde", "inteligência de dados", "ciência de dados"] },
-  { team: "UEP", attrs: ["ensino", "pesquisa", "educação permanente", "formação profissional", "capacitação"] },
-  { team: "UDIGIS", attrs: ["saúde digital", "transformação digital", "tecnologias em saúde", "inovação digital"] },
-  { team: "UPI", attrs: ["inovação", "projetos", "parcerias", "negócios", "portfólio de projetos"] },
-];
-
-const STATUSES = [
-  "Em análise pela UFOC",
-  "Aprovado pela UFOC",
-  "Em análise pela SEAR",
-  "Aprovado pela SEAR",
-  "Aguardando validação da DIREX",
-  "Aprovado pela DIREX",
-];
-
-const STATUS_COLORS = {
-  "Em análise pela UFOC": "#f59e0b",
-  "Aprovado pela UFOC": "#10b981",
-  "Em análise pela SEAR": "#3b82f6",
-  "Aprovado pela SEAR": "#6366f1",
-  "Aguardando validação da DIREX": "#f97316",
-  "Aprovado pela DIREX": "#22c55e",
-};
-
-const formatCurrency = (val) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
-
-function checkAttributionConflicts(attributions) {
-  const conflicts = [];
-  attributions.forEach((attr) => {
-    const lower = attr.toLowerCase();
-    EXISTING_ATTRIBUTIONS.forEach(({ team, attrs }) => {
-      attrs.forEach((keyword) => {
-        if (lower.includes(keyword.toLowerCase())) {
-          conflicts.push({ attr, team, keyword });
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgSUS - Sistema de Propostas de Vagas</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Scripts React -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel para traduzir JSX no navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0e1a;
+            font-family: 'Ubuntu', sans-serif;
+            color: #e2e8f0;
         }
-      });
-    });
-  });
-  return conflicts;
-}
+        /* Estilos base para garantir consistência sem CSS externo */
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-function calcMonthlyTotal(cargos) {
-  return cargos.reduce((sum, c) => {
-    if (!c.cargo || !c.quantidade) return sum;
-    const data = CARGO_DATA[c.cargo];
-    if (!data) return sum;
-    const qtd = Number(c.quantidade) || 0;
-    const monthly = data.salario + data.alimentacao + data.bemEstar + data.insalubridade + data.periculosidade;
-    return sum + monthly * qtd;
-  }, 0);
-}
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-function calcYearImpact(cargos, requestDate) {
-  const now = requestDate ? new Date(requestDate) : new Date();
-  const endOfYear = new Date(now.getFullYear(), 11, 31);
-  const diffMs = endOfYear - now;
-  const months = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
-  return calcMonthlyTotal(cargos) * months;
-}
+        // ── DADOS E CONSTANTES ──────────────────────────────────────────────────
+        const CARGO_DATA = {
+            "ANALISTA DE GESTAO": { salario: 9626, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ANALISTA DE GESTÃO": { salario: 8000, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ANALISTA GESTÃO": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ANALISTA TECNICO": { salario: 8000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "ANALISTA ADMINISTRATIVO": { salario: 5400, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "ASSESSOR DA PRESIDENCIA": { salario: 14800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ASSESSOR DE DIRETORIA": { salario: 12800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ASSESSOR DE INSTANCIA": { salario: 12800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ASSESSOR DE UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ASSESSOR UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ASSESSOR ESPECIALISTA": { salario: 17700, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "ASSESSOR SI": { salario: 11000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "AUXILIAR DE GESTAO": { salario: 4000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "AUXILIAR DE GESTÃO": { salario: 3000, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "CHEFE DE GABINETE": { salario: 18869, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "COORDENADOR": { salario: 14800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "COORDENADOR DE PROJETO": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "COORDENADOR DE REGIONAL": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "COORDENADOR INTERFEDERATIVO": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "DIRETOR": { salario: 33546, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "DIRETOR PRESIDENTE": { salario: 36690, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "GESTOR EXECUTIVO": { salario: 23063, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "GESTOR DE PROJETOS": { salario: 18869, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ASSISTENTE DE PROJETO": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ASSISTENTE DE UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "PSICOLOGO AGENCIA": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "AGENTE DE PROJETO": { salario: 4000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "APRENDIZ": { salario: 1000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ENGENHEIRO DE SEGURANCA DO TRABALHO": { salario: 6439, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
+            "ADVOGADO": { salario: 10800, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "CONTADOR": { salario: 7060, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "ADMINISTRADOR": { salario: 7060, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "ASSISTENTE ADMINISTRATIVO": { salario: 4800, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "AUXILIAR ADMINISTRATIVO": { salario: 2900, alimentacao: 950, bemEstar: 0, insalubridade: 162, periculosidade: 0 },
+            "ASSESSOR DE IMPRENSA": { salario: 5000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "PEDAGOGO": { salario: 7060, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "ENFERMEIRO": { salario: 7446, alimentacao: 1075, bemEstar: 400, insalubridade: 324, periculosidade: 0 },
+            "MEDICO": { salario: 15080, alimentacao: 1200, bemEstar: 800, insalubridade: 324, periculosidade: 0 },
+            "PSICOLOGO": { salario: 7060, alimentacao: 950, bemEstar: 0, insalubridade: 324, periculosidade: 0 },
+            "ENGENHEIRO CIVIL": { salario: 12903, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+            "ARQUITETO E URBANISTA": { salario: 12903, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
+        };
 
-// ── FORM PAGE ─────────────────────────────────────────────────────────────
-function ProposalForm({ onSubmit, onCancel, initialData }) {
-  const [diretoria, setDiretoria] = useState(initialData?.diretoria || "");
-  const [unidade, setUnidade] = useState(initialData?.unidade || "");
-  const [proposito, setProposito] = useState(initialData?.proposito || "");
-  const [atribuicoes, setAtribuicoes] = useState(initialData?.atribuicoes || [""]);
-  const [cargos, setCargos] = useState(initialData?.cargos || [{ cargo: "", quantidade: 1 }]);
-  const [localizacao, setLocalizacao] = useState(initialData?.localizacao || "Sede");
-  const [conflicts, setConflicts] = useState([]);
+        const ORG_STRUCTURE = {
+            "Presidência (PRES)": { units: ["Gabinete da Presidência (GAB)", "Secretaria Executiva e de Articulação (SEAR)", "Unidade de Integridade (UINT)", "Unidade Jurídica (UJUR)", "Unidade de Comunicação (UCOM)", "Unidade de Finanças, Orçamento, Contabilidade e Prestação de Contas (UFOC)", "Unidade de Planejamento e Gestão Estratégica (UPGE)"] },
+            "Diretoria de Atenção Integral à Saúde (DAIS)": { units: ["Unidade de Saúde Indígena (USI)", "Unidade de Atenção Primária à Saúde (UAPS)", "Unidade de Atenção Especializada (UAE)", "Unidade de Monitoramento e Avaliação (UMA)", "Unidade de Projetos e Inovação (UPI)", "Unidade de Ensino e Pesquisa (UEP)", "Unidade de Transformação Digital em Saúde (UDIGIS)"] },
+            "Diretoria de Operações (DIOP)": { units: ["Unidade de Gestão de Pessoas (UGP)", "Unidade de Aquisições e Contratos (UAC)", "Unidade de Logística, Suprimentos e Patrimônio (ULOG)", "Unidade de Infraestrutura (UINFRA)", "Unidade de Tecnologia da Informação e Comunicação (UTIC)"] }
+        };
 
-  const units = diretoria ? ORG_STRUCTURE[diretoria]?.units || [] : [];
+        const STATUSES = ["Em análise pela UFOC", "Aprovado pela UFOC", "Em análise pela SEAR", "Aprovado pela SEAR", "Aguardando validação da DIREX", "Aprovado pela DIREX"];
+        const STATUS_COLORS = { "Em análise pela UFOC": "#f59e0b", "Aprovado pela UFOC": "#10b981", "Em análise pela SEAR": "#3b82f6", "Aprovado pela SEAR": "#6366f1", "Aguardando validação da DIREX": "#f97316", "Aprovado pela DIREX": "#22c55e" };
 
-  useEffect(() => {
-    const filled = atribuicoes.filter(Boolean);
-    if (filled.length > 0) {
-      setConflicts(checkAttributionConflicts(filled));
-    } else {
-      setConflicts([]);
-    }
-  }, [atribuicoes]);
+        const formatCurrency = (val) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
 
-  const addAtribuicao = () => setAtribuicoes([...atribuicoes, ""]);
-  const removeAtribuicao = (i) => setAtribuicoes(atribuicoes.filter((_, idx) => idx !== i));
-  const updateAtribuicao = (i, val) => {
-    const updated = [...atribuicoes];
-    updated[i] = val;
-    setAtribuicoes(updated);
-  };
+        function calcMonthlyTotal(cargos) {
+            return cargos.reduce((sum, c) => {
+                if (!c.cargo || !c.quantidade) return sum;
+                const data = CARGO_DATA[c.cargo];
+                if (!data) return sum;
+                const qtd = Number(c.quantidade) || 0;
+                return sum + (data.salario + data.alimentacao + data.bemEstar + data.insalubridade + data.periculosidade) * qtd;
+            }, 0);
+        }
 
-  const addCargo = () => setCargos([...cargos, { cargo: "", quantidade: 1 }]);
-  const removeCargo = (i) => setCargos(cargos.filter((_, idx) => idx !== i));
-  const updateCargo = (i, field, val) => {
-    const updated = [...cargos];
-    updated[i] = { ...updated[i], [field]: val };
-    setCargos(updated);
-  };
+        function calcYearImpact(cargos, requestDate) {
+            const now = requestDate ? new Date(requestDate) : new Date();
+            const endOfYear = new Date(now.getFullYear(), 11, 31);
+            const months = Math.max(1, Math.ceil((endOfYear - now) / (1000 * 60 * 60 * 24 * 30.44)));
+            return calcMonthlyTotal(cargos) * months;
+        }
 
-  const monthlyTotal = calcMonthlyTotal(cargos);
-  const yearImpact = calcYearImpact(cargos, new Date());
-  const now = new Date();
-  const endOfYear = new Date(now.getFullYear(), 11, 31);
-  const months = Math.max(1, Math.ceil((endOfYear - now) / (1000 * 60 * 60 * 24 * 30.44)));
+        // ── COMPONENTES ─────────────────────────────────────────────────────────
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!diretoria || !unidade || !proposito) return;
-    onSubmit({
-      diretoria,
-      unidade,
-      proposito,
-      atribuicoes: atribuicoes.filter(Boolean),
-      cargos: cargos.filter((c) => c.cargo),
-      localizacao,
-      status: "Em análise pela UFOC",
-      requestDate: new Date().toISOString(),
-      conflicts,
-      approvals: { UFOC: false, NEISS: false, UTIC: false, SEAR: false },
-      comments: [],
-    });
-  };
+        function ProposalForm({ onSubmit, onCancel }) {
+            const [diretoria, setDiretoria] = useState("");
+            const [unidade, setUnidade] = useState("");
+            const [proposito, setProposito] = useState("");
+            const [atribuicoes, setAtribuicoes] = useState([""]);
+            const [cargos, setCargos] = useState([{ cargo: "", quantidade: 1 }]);
+            const [localizacao, setLocalizacao] = useState("Sede");
 
-  return (
-    <div style={{ maxWidth: 860, margin: "0 auto" }}>
-      <div style={styles.pageHeader}>
-        <div style={styles.pageHeaderIcon}>📋</div>
-        <div>
-          <h2 style={styles.pageTitle}>Nova Solicitação de Criação de Coordenação</h2>
-          <p style={styles.pageSubtitle}>Preencha os dados abaixo para solicitar a criação e liberação de vagas</p>
-        </div>
-      </div>
+            const units = diretoria ? ORG_STRUCTURE[diretoria]?.units || [] : [];
+            const monthlyTotal = calcMonthlyTotal(cargos);
 
-      <form onSubmit={handleSubmit}>
-        {/* Section 1: Organização */}
-        <div style={styles.card}>
-          <div style={styles.sectionTitle}><span style={styles.sectionDot} />Identificação Organizacional</div>
-          <div style={styles.grid2}>
-            <div style={styles.field}>
-              <label style={styles.label}>Diretoria *</label>
-              <select style={styles.select} value={diretoria} onChange={(e) => { setDiretoria(e.target.value); setUnidade(""); }} required>
-                <option value="">Selecione a Diretoria</option>
-                {Object.keys(ORG_STRUCTURE).map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-            <div style={styles.field}>
-              <label style={styles.label}>Unidade *</label>
-              <select style={styles.select} value={unidade} onChange={(e) => setUnidade(e.target.value)} required disabled={!diretoria}>
-                <option value="">Selecione a Unidade</option>
-                {units.map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </div>
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Localização da Coordenação *</label>
-            <div style={styles.radioGroup}>
-              {["Sede", "Cowork 1", "Cowork 2", "Home Office"].map((l) => (
-                <label key={l} style={{ ...styles.radioLabel, ...(localizacao === l ? styles.radioLabelActive : {}) }}>
-                  <input type="radio" value={l} checked={localizacao === l} onChange={() => setLocalizacao(l)} style={{ display: "none" }} />
-                  {l === "Sede" ? "🏢" : l === "Home Office" ? "🏠" : "🏛️"} {l}
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Section 2: Propósito */}
-        <div style={styles.card}>
-          <div style={styles.sectionTitle}><span style={styles.sectionDot} />Propósito da Coordenação</div>
-          <div style={styles.field}>
-            <label style={styles.label}>Propósito *</label>
-            <textarea
-              style={styles.textarea}
-              rows={4}
-              placeholder="Descreva o propósito e objetivos estratégicos da coordenação..."
-              value={proposito}
-              onChange={(e) => setProposito(e.target.value)}
-              required
-            />
-          </div>
-        </div>
-
-        {/* Section 3: Atribuições */}
-        <div style={styles.card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={styles.sectionTitle} ><span style={styles.sectionDot} />Atribuições</div>
-            <button type="button" style={styles.btnSecondary} onClick={addAtribuicao}>+ Adicionar Atribuição</button>
-          </div>
-          {atribuicoes.map((attr, i) => (
-            <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-start" }}>
-              <div style={styles.attrIndex}>{i + 1}</div>
-              <textarea
-                style={{ ...styles.textarea, flex: 1, marginBottom: 0, minHeight: 60 }}
-                placeholder={`Atribuição ${i + 1}...`}
-                value={attr}
-                onChange={(e) => updateAtribuicao(i, e.target.value)}
-                rows={2}
-              />
-              {atribuicoes.length > 1 && (
-                <button type="button" onClick={() => removeAtribuicao(i)} style={styles.btnDelete}>✕</button>
-              )}
-            </div>
-          ))}
-          {conflicts.length > 0 && (
-            <div style={styles.conflictBox}>
-              <div style={styles.conflictTitle}>⚠️ Atenção: Possíveis sobreposições com atribuições existentes</div>
-              {conflicts.map((c, i) => (
-                <div key={i} style={styles.conflictItem}>
-                  <span style={styles.conflictTag}>{c.team}</span>
-                  <span style={styles.conflictText}>A atribuição "<em>{c.attr.substring(0, 60)}...</em>" tem sobreposição com o time <strong>{c.team}</strong> (palavra-chave: "<em>{c.keyword}</em>"). Verifique o Mapa de Atribuições.</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Section 4: Cargos */}
-        <div style={styles.card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Composição de Cargos</div>
-            <button type="button" style={styles.btnSecondary} onClick={addCargo}>+ Adicionar Cargo</button>
-          </div>
-
-          <div style={styles.cargoTableHeader}>
-            <div style={{ flex: 3 }}>Cargo</div>
-            <div style={{ flex: 1 }}>Qtd.</div>
-            <div style={{ flex: 2 }}>Salário Base</div>
-            <div style={{ flex: 2 }}>Aux. Alimentação</div>
-            <div style={{ flex: 2 }}>Aux. Bem Estar</div>
-            <div style={{ flex: 2 }}>Outros</div>
-            <div style={{ flex: 2 }}>Total/cargo</div>
-            <div style={{ width: 32 }}></div>
-          </div>
-
-          {cargos.map((c, i) => {
-            const data = CARGO_DATA[c.cargo] || {};
-            const qtd = Number(c.quantidade) || 0;
-            const outros = (data.insalubridade || 0) + (data.periculosidade || 0);
-            const totalPerPerson = (data.salario || 0) + (data.alimentacao || 0) + (data.bemEstar || 0) + outros;
-            const totalWithQtd = totalPerPerson * qtd;
             return (
-              <div key={i} style={styles.cargoRow}>
-                <div style={{ flex: 3 }}>
-                  <select
-                    style={styles.selectSm}
-                    value={c.cargo}
-                    onChange={(e) => updateCargo(i, "cargo", e.target.value)}
-                  >
-                    <option value="">Selecione o cargo</option>
-                    {Object.keys(CARGO_DATA).map((name) => <option key={name} value={name}>{name}</option>)}
-                  </select>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <input
-                    type="number"
-                    min={1}
-                    style={styles.inputSm}
-                    value={c.quantidade}
-                    onChange={(e) => updateCargo(i, "quantidade", e.target.value)}
-                  />
-                </div>
-                <div style={{ flex: 2, ...styles.cargoValue }}>{data.salario ? formatCurrency(data.salario) : "—"}</div>
-                <div style={{ flex: 2, ...styles.cargoValue }}>{data.alimentacao ? formatCurrency(data.alimentacao) : "—"}</div>
-                <div style={{ flex: 2, ...styles.cargoValue }}>{data.bemEstar ? formatCurrency(data.bemEstar) : "—"}</div>
-                <div style={{ flex: 2, ...styles.cargoValue }}>{outros ? formatCurrency(outros) : "—"}</div>
-                <div style={{ flex: 2, ...styles.cargoValue, color: "#22c55e", fontWeight: 700 }}>
-                  {c.cargo && qtd ? formatCurrency(totalWithQtd) : "—"}
-                </div>
-                <div style={{ width: 32 }}>
-                  {cargos.length > 1 && <button type="button" onClick={() => removeCargo(i)} style={styles.btnDelete}>✕</button>}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Summary */}
-          <div style={styles.impactBox}>
-            <div style={styles.impactGrid}>
-              <div style={styles.impactItem}>
-                <div style={styles.impactLabel}>Total Mensal</div>
-                <div style={styles.impactValue}>{formatCurrency(monthlyTotal)}</div>
-              </div>
-              <div style={styles.impactItem}>
-                <div style={styles.impactLabel}>Meses restantes no ano</div>
-                <div style={styles.impactValue}>{months}</div>
-              </div>
-              <div style={{ ...styles.impactItem, borderLeft: "2px solid rgba(99,102,241,0.3)" }}>
-                <div style={styles.impactLabel}>Impacto até Dez/{now.getFullYear()}</div>
-                <div style={{ ...styles.impactValue, color: "#f59e0b" }}>{formatCurrency(yearImpact)}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
-          {onCancel && <button type="button" style={styles.btnOutline} onClick={onCancel}>Cancelar</button>}
-          <button type="submit" style={styles.btnPrimary}>Enviar Proposta →</button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-// ── PROPOSAL DETAIL MODAL ─────────────────────────────────────────────────
-function ProposalDetail({ proposal, onClose, onUpdate, budget }) {
-  const [editing, setEditing] = useState(false);
-  const [status, setStatus] = useState(proposal.status);
-  const [comment, setComment] = useState("");
-  const [comments, setComments] = useState(proposal.comments || []);
-  const [editedCargos, setEditedCargos] = useState(
-    proposal.cargos.map((c) => ({ ...c, aprovado: c.aprovado ?? c.quantidade }))
-  );
-  const [approvals, setApprovals] = useState(proposal.approvals || { UFOC: false, NEISS: false, UTIC: false, SEAR: false });
-  const [emailSent, setEmailSent] = useState(false);
-
-  const UNITS_APPROVAL = ["UFOC", "NEISS", "UTIC", "SEAR"];
-  const conflicts = proposal.conflicts || [];
-  const monthlyTotal = calcMonthlyTotal(editedCargos.map((c) => ({ ...c, quantidade: c.aprovado ?? c.quantidade })));
-  const yearImpact = calcYearImpact(editedCargos.map((c) => ({ ...c, quantidade: c.aprovado ?? c.quantidade })), proposal.requestDate);
-
-  const addComment = () => {
-    if (!comment.trim()) return;
-    const newComments = [...comments, { text: comment, date: new Date().toLocaleString("pt-BR"), author: "Usuário" }];
-    setComments(newComments);
-    setComment("");
-  };
-
-  const handleSave = () => {
-    const updated = {
-      ...proposal,
-      status,
-      comments,
-      approvals,
-      cargos: editedCargos,
-    };
-    onUpdate(updated);
-    setEditing(false);
-  };
-
-  const simulateSendEmail = () => {
-    setEmailSent(true);
-    setTimeout(() => setEmailSent(false), 3000);
-  };
-
-  return (
-    <div style={styles.modalOverlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.modalHeader}>
-          <div>
-            <h3 style={styles.modalTitle}>{proposal.unidade}</h3>
-            <p style={styles.modalSubtitle}>{proposal.diretoria} · {proposal.localizacao}</p>
-          </div>
-          <button onClick={onClose} style={styles.closeBtn}>✕</button>
-        </div>
-
-        <div style={styles.modalBody}>
-          {/* Status */}
-          <div style={styles.card}>
-            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Status da Proposta</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-              {STATUSES.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => { setStatus(s); setEditing(true); }}
-                  style={{
-                    ...styles.statusChip,
-                    background: status === s ? STATUS_COLORS[s] : "rgba(255,255,255,0.05)",
-                    color: status === s ? "#fff" : "#94a3b8",
-                    border: status === s ? "none" : "1px solid rgba(255,255,255,0.1)",
-                  }}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-            {status === "Aprovado pela DIREX" && (
-              <div style={styles.emailBox}>
-                <div style={styles.emailTitle}>📧 Notificar equipes sobre aprovação</div>
-                <div style={styles.emailList}>
-                  {["coadi@teste.com.br", "ufoc@teste", "ugp@teste", "uinfra@teste", "utic@teste"].map((e) => (
-                    <span key={e} style={styles.emailTag}>{e}</span>
-                  ))}
-                </div>
-                <button onClick={simulateSendEmail} style={styles.btnPrimary}>
-                  {emailSent ? "✓ E-mail enviado!" : "Enviar notificação"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Approvals */}
-          <div style={styles.card}>
-            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Validação por Unidade</div>
-            <div style={styles.approvalGrid}>
-              {UNITS_APPROVAL.map((unit) => (
-                <div key={unit} style={{ ...styles.approvalItem, background: approvals[unit] ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.03)" }}>
-                  <div style={styles.approvalName}>{unit}</div>
-                  <div
-                    style={{ ...styles.approvalToggle, background: approvals[unit] ? "#22c55e" : "#374151" }}
-                    onClick={() => { setApprovals({ ...approvals, [unit]: !approvals[unit] }); setEditing(true); }}
-                  >
-                    {approvals[unit] ? "✓ Aprovado" : "Pendente"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Conflicts */}
-          {conflicts.length > 0 && (
-            <div style={{ ...styles.conflictBox, marginBottom: 16 }}>
-              <div style={styles.conflictTitle}>⚠️ {conflicts.length} sobreposição(ões) identificada(s) no Mapa de Atribuições</div>
-              {conflicts.map((c, i) => (
-                <div key={i} style={styles.conflictItem}>
-                  <span style={styles.conflictTag}>{c.team}</span>
-                  <span style={styles.conflictText}>{c.attr} → detectado em <strong>{c.team}</strong></span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Cargos */}
-          <div style={styles.card}>
-            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Cargos Solicitados vs. Aprovados</div>
-            <div style={styles.cargoTableHeader}>
-              <div style={{ flex: 3 }}>Cargo</div>
-              <div style={{ flex: 1 }}>Solicitado</div>
-              <div style={{ flex: 1 }}>Aprovado</div>
-              <div style={{ flex: 2 }}>Custo/mês</div>
-            </div>
-            {editedCargos.map((c, i) => {
-              const data = CARGO_DATA[c.cargo] || {};
-              const monthly = ((data.salario || 0) + (data.alimentacao || 0) + (data.bemEstar || 0)) * (Number(c.aprovado) || 0);
-              return (
-                <div key={i} style={styles.cargoRow}>
-                  <div style={{ flex: 3, fontSize: 13, color: "#e2e8f0" }}>{c.cargo}</div>
-                  <div style={{ flex: 1, textAlign: "center", color: "#94a3b8" }}>{c.quantidade}</div>
-                  <div style={{ flex: 1 }}>
-                    <input
-                      type="number"
-                      min={0}
-                      max={c.quantidade}
-                      style={{ ...styles.inputSm, width: 60 }}
-                      value={c.aprovado ?? c.quantidade}
-                      onChange={(e) => {
-                        const updated = [...editedCargos];
-                        updated[i] = { ...updated[i], aprovado: Number(e.target.value) };
-                        setEditedCargos(updated);
-                        setEditing(true);
-                      }}
-                    />
-                  </div>
-                  <div style={{ flex: 2, ...styles.cargoValue, color: "#22c55e" }}>{formatCurrency(monthly)}</div>
-                </div>
-              );
-            })}
-            <div style={styles.impactBox}>
-              <div style={styles.impactGrid}>
-                <div style={styles.impactItem}>
-                  <div style={styles.impactLabel}>Total Mensal Aprovado</div>
-                  <div style={styles.impactValue}>{formatCurrency(monthlyTotal)}</div>
-                </div>
-                <div style={{ ...styles.impactItem, borderLeft: "2px solid rgba(99,102,241,0.3)" }}>
-                  <div style={styles.impactLabel}>Impacto até fim do ano</div>
-                  <div style={{ ...styles.impactValue, color: "#f59e0b" }}>{formatCurrency(yearImpact)}</div>
-                </div>
-                <div style={{ ...styles.impactItem, borderLeft: "2px solid rgba(99,102,241,0.3)" }}>
-                  <div style={styles.impactLabel}>Saldo Orçamentário</div>
-                  <div style={{ ...styles.impactValue, color: budget - yearImpact < 0 ? "#ef4444" : "#22c55e" }}>
-                    {formatCurrency(budget)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Propósito e Atribuições */}
-          <div style={styles.card}>
-            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Propósito</div>
-            <p style={{ color: "#94a3b8", lineHeight: 1.6, fontSize: 14 }}>{proposal.proposito}</p>
-            {proposal.atribuicoes?.length > 0 && (
-              <>
-                <div style={{ ...styles.sectionTitle, marginTop: 16 }}><span style={styles.sectionDot} />Atribuições</div>
-                <ul style={{ paddingLeft: 20, color: "#94a3b8", lineHeight: 1.8, fontSize: 13 }}>
-                  {proposal.atribuicoes.map((a, i) => <li key={i}>{a}</li>)}
-                </ul>
-              </>
-            )}
-          </div>
-
-          {/* Comments */}
-          <div style={styles.card}>
-            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Comentários e Ajustes</div>
-            {comments.map((c, i) => (
-              <div key={i} style={styles.commentItem}>
-                <div style={styles.commentMeta}>{c.author} · {c.date}</div>
-                <div style={styles.commentText}>{c.text}</div>
-              </div>
-            ))}
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <input
-                style={{ ...styles.inputSm, flex: 1, height: 40 }}
-                placeholder="Adicionar comentário ou ajuste..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addComment()}
-              />
-              <button style={styles.btnSecondary} onClick={addComment}>Adicionar</button>
-            </div>
-          </div>
-        </div>
-
-        <div style={styles.modalFooter}>
-          <button style={styles.btnOutline} onClick={onClose}>Fechar</button>
-          {editing && <button style={styles.btnPrimary} onClick={handleSave}>Salvar Alterações</button>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── PROPOSALS LIST ────────────────────────────────────────────────────────
-function ProposalsList({ proposals, onSelect, onNew, budget }) {
-  const [filter, setFilter] = useState("Todos");
-  const [search, setSearch] = useState("");
-
-  const filtered = proposals.filter((p) => {
-    const matchStatus = filter === "Todos" || p.status === filter;
-    const matchSearch = p.unidade.toLowerCase().includes(search.toLowerCase()) ||
-      p.diretoria.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchSearch;
-  });
-
-  const usedBudget = proposals
-    .filter((p) => p.status === "Aprovado pela DIREX")
-    .reduce((sum, p) => sum + calcYearImpact(p.cargos.map((c) => ({ ...c, quantidade: c.aprovado ?? c.quantidade })), p.requestDate), 0);
-
-  return (
-    <div>
-      <div style={styles.pageHeader}>
-        <div style={styles.pageHeaderIcon}>📊</div>
-        <div style={{ flex: 1 }}>
-          <h2 style={styles.pageTitle}>Propostas de Coordenação</h2>
-          <p style={styles.pageSubtitle}>{proposals.length} proposta(s) registrada(s)</p>
-        </div>
-        <button style={styles.btnPrimary} onClick={onNew}>+ Nova Proposta</button>
-      </div>
-
-      {/* Budget Bar */}
-      <div style={styles.budgetCard}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ color: "#94a3b8", fontSize: 13 }}>Orçamento Anual de Pessoal</span>
-          <span style={{ color: "#e2e8f0", fontWeight: 700 }}>{formatCurrency(budget - usedBudget)} disponível</span>
-        </div>
-        <div style={styles.budgetBar}>
-          <div style={{ ...styles.budgetFill, width: `${Math.min(100, (usedBudget / budget) * 100)}%` }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 12 }}>
-          <span style={{ color: "#ef4444" }}>Comprometido: {formatCurrency(usedBudget)}</span>
-          <span style={{ color: "#22c55e" }}>Total: {formatCurrency(budget)}</span>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <input
-          style={{ ...styles.inputSm, width: 220, height: 36 }}
-          placeholder="🔍 Buscar proposta..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button style={{ ...styles.filterChip, ...(filter === "Todos" ? styles.filterChipActive : {}) }} onClick={() => setFilter("Todos")}>Todos</button>
-        {STATUSES.map((s) => (
-          <button key={s} style={{ ...styles.filterChip, ...(filter === s ? { background: STATUS_COLORS[s], color: "#fff" } : {}) }} onClick={() => setFilter(s)}>
-            {s}
-          </button>
-        ))}
-      </div>
-
-      {/* Cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {filtered.length === 0 ? (
-          <div style={styles.emptyState}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-            <div style={{ color: "#94a3b8" }}>Nenhuma proposta encontrada</div>
-          </div>
-        ) : (
-          filtered.map((p, i) => {
-            const conflicts = p.conflicts?.length || 0;
-            const monthly = calcMonthlyTotal(p.cargos.map((c) => ({ ...c, quantidade: c.aprovado ?? c.quantidade })));
-            return (
-              <div key={i} style={styles.proposalCard} onClick={() => onSelect(p)}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
-                      <span style={{ ...styles.statusDot, background: STATUS_COLORS[p.status] || "#6b7280" }} />
-                      <span style={styles.proposalTitle}>{p.unidade}</span>
+                <div style={{ maxWidth: 860, margin: "0 auto" }}>
+                    <div style={styles.pageHeader}>
+                        <div style={styles.pageHeaderIcon}>📋</div>
+                        <div>
+                            <h2 style={styles.pageTitle}>Nova Solicitação de Vagas</h2>
+                            <p style={styles.pageSubtitle}>Preencha para análise orçamentária</p>
+                        </div>
                     </div>
-                    <span style={styles.proposalMeta}>{p.diretoria} · {p.localizacao}</span>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={styles.proposalCost}>{formatCurrency(monthly)}<span style={{ fontSize: 11, color: "#6b7280" }}>/mês</span></div>
-                    <span style={{ ...styles.statusBadge, background: STATUS_COLORS[p.status] || "#374151" }}>{p.status}</span>
-                  </div>
+                    <form onSubmit={(e) => { e.preventDefault(); onSubmit({ diretoria, unidade, proposito, atribuicoes, cargos, localizacao, status: "Em análise pela UFOC", requestDate: new Date().toISOString(), approvals: { UFOC: false, SEAR: false, UTIC: false }, comments: [] }); }}>
+                        <div style={styles.card}>
+                            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Organização</div>
+                            <div style={styles.grid2}>
+                                <div style={styles.field}>
+                                    <label style={styles.label}>Diretoria</label>
+                                    <select style={styles.select} value={diretoria} onChange={(e) => { setDiretoria(e.target.value); setUnidade(""); }} required>
+                                        <option value="">Selecione...</option>
+                                        {Object.keys(ORG_STRUCTURE).map(d => <option key={d} value={d}>{d}</option>)}
+                                    </select>
+                                </div>
+                                <div style={styles.field}>
+                                    <label style={styles.label}>Unidade</label>
+                                    <select style={styles.select} value={unidade} onChange={(e) => setUnidade(e.target.value)} required disabled={!diretoria}>
+                                        <option value="">Selecione...</option>
+                                        {units.map(u => <option key={u} value={u}>{u}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={styles.card}>
+                            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Composição de Cargos</div>
+                            {cargos.map((c, i) => (
+                                <div key={i} style={styles.cargoRow}>
+                                    <select style={{...styles.select, flex: 3}} value={c.cargo} onChange={(e) => { const n = [...cargos]; n[i].cargo = e.target.value; setCargos(n); }}>
+                                        <option value="">Selecionar Cargo...</option>
+                                        {Object.keys(CARGO_DATA).map(name => <option key={name} value={name}>{name}</option>)}
+                                    </select>
+                                    <input type="number" style={{...styles.select, flex: 1}} value={c.quantidade} onChange={(e) => { const n = [...cargos]; n[i].quantidade = e.target.value; setCargos(n); }} />
+                                    {cargos.length > 1 && <button type="button" onClick={() => setCargos(cargos.filter((_, idx) => idx !== i))} style={styles.btnDelete}>✕</button>}
+                                </div>
+                            ))}
+                            <button type="button" onClick={() => setCargos([...cargos, { cargo: "", quantidade: 1 }])} style={{...styles.btnSecondary, marginTop: 10}}>+ Adicionar</button>
+                            <div style={styles.impactBox}>
+                                <div style={styles.impactLabel}>Custo Mensal Estimado</div>
+                                <div style={styles.impactValue}>{formatCurrency(monthlyTotal)}</div>
+                            </div>
+                        </div>
+                        <div style={{display: "flex", gap: 10, justifyContent: "flex-end"}}>
+                            <button type="button" onClick={onCancel} style={styles.btnOutline}>Cancelar</button>
+                            <button type="submit" style={styles.btnPrimary}>Enviar Proposta</button>
+                        </div>
+                    </form>
                 </div>
-                <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 12, color: "#6b7280" }}>
-                  <span>👥 {p.cargos.length} cargo(s)</span>
-                  <span>📍 {p.localizacao}</span>
-                  {conflicts > 0 && <span style={{ color: "#f59e0b" }}>⚠️ {conflicts} sobreposição(ões)</span>}
-                  <span>🗓️ {new Date(p.requestDate).toLocaleDateString("pt-BR")}</span>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {Object.entries(p.approvals || {}).map(([unit, approved]) => (
-                      <span key={unit} style={{ ...styles.approvalBadge, background: approved ? "rgba(34,197,94,0.2)" : "rgba(107,114,128,0.2)", color: approved ? "#22c55e" : "#6b7280" }}>{unit}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
             );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
+        }
 
-// ── MAIN APP ──────────────────────────────────────────────────────────────
-export default function App() {
-  const [page, setPage] = useState("list"); // "list" | "form" | "detail"
-  const [proposals, setProposals] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const BUDGET = 30_000_000;
+        function ProposalsList({ proposals, onSelect, onNew }) {
+            return (
+                <div>
+                    <div style={styles.pageHeader}>
+                        <div style={styles.pageHeaderIcon}>📊</div>
+                        <div style={{flex: 1}}>
+                            <h2 style={styles.pageTitle}>Dashboard de Propostas</h2>
+                            <p style={styles.pageSubtitle}>{proposals.length} solicitações em andamento</p>
+                        </div>
+                        <button onClick={onNew} style={styles.btnPrimary}>+ Nova Proposta</button>
+                    </div>
+                    {proposals.length === 0 ? (
+                        <div style={styles.emptyState}>Nenhuma proposta cadastrada ainda.</div>
+                    ) : (
+                        proposals.map((p, i) => (
+                            <div key={i} style={styles.proposalCard} onClick={() => onSelect(p)}>
+                                <div style={{display: "flex", justifyContent: "space-between"}}>
+                                    <div>
+                                        <div style={styles.proposalTitle}>{p.unidade}</div>
+                                        <div style={styles.proposalMeta}>{p.diretoria}</div>
+                                    </div>
+                                    <div style={{textAlign: "right"}}>
+                                        <div style={{...styles.statusBadge, background: STATUS_COLORS[p.status]}}>{p.status}</div>
+                                        <div style={{marginTop: 5, fontSize: 14, fontWeight: 'bold'}}>{formatCurrency(calcMonthlyTotal(p.cargos))}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            );
+        }
 
-  const usedBudget = proposals
-    .filter((p) => p.status === "Aprovado pela DIREX")
-    .reduce((sum, p) => sum + calcYearImpact(p.cargos.map((c) => ({ ...c, quantidade: c.aprovado ?? c.quantidade })), p.requestDate), 0);
+        // ── COMPONENTE PRINCIPAL ────────────────────────────────────────────────
+        function App() {
+            const [page, setPage] = useState("list");
+            const [proposals, setProposals] = useState([]);
+            const [selected, setSelected] = useState(null);
 
-  const availableBudget = BUDGET - usedBudget;
+            return (
+                <div style={styles.root}>
+                    <div style={styles.bg} />
+                    <nav style={styles.nav}>
+                        <div style={styles.navBrand}>
+                            <div style={styles.navLogo}>AgSUS</div>
+                            <span style={styles.navTitle}>Gestão de Vagas v2.0</span>
+                        </div>
+                        <button style={styles.navBtn} onClick={() => setPage("list")}>Início</button>
+                    </nav>
+                    <main style={styles.main}>
+                        {page === "list" && <ProposalsList proposals={proposals} onNew={() => setPage("form")} onSelect={(p) => { setSelected(p); setPage("detail"); }} />}
+                        {page === "form" && <ProposalForm onCancel={() => setPage("list")} onSubmit={(data) => { setProposals([...proposals, data]); setPage("list"); }} />}
+                        {page === "detail" && selected && (
+                            <div>
+                                <button style={styles.btnOutline} onClick={() => setPage("list")}>← Voltar</button>
+                                <div style={{...styles.card, marginTop: 20}}>
+                                    <h2>{selected.unidade}</h2>
+                                    <p>{selected.proposito}</p>
+                                    <div style={{...styles.statusBadge, background: STATUS_COLORS[selected.status]}}>{selected.status}</div>
+                                    <hr style={{opacity: 0.1, margin: '20px 0'}} />
+                                    <h4>Cargos Solicitados:</h4>
+                                    {selected.cargos.map((c, idx) => (
+                                        <div key={idx} style={{padding: '5px 0'}}>{c.quantidade}x {c.cargo}</div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
 
-  const handleSubmit = (data) => {
-    setProposals([...proposals, { ...data, id: Date.now() }]);
-    setPage("list");
-  };
+        // ── ESTILOS EM JAVASCRIPT ───────────────────────────────────────────────
+        const styles = {
+            root: { minHeight: "100vh", position: "relative", zIndex: 1 },
+            bg: { position: "fixed", inset: 0, background: "radial-gradient(circle at 20% 30%, rgba(99,102,241,0.05), transparent), #0a0e1a", zIndex: -1 },
+            nav: { padding: "15px 30px", background: "rgba(13,18,32,0.8)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0 },
+            navBrand: { display: "flex", alignItems: "center", gap: 15 },
+            navLogo: { background: "linear-gradient(135deg, #22c55e, #3b82f6)", padding: "5px 12px", borderRadius: "6px", fontWeight: "bold", fontSize: "14px" },
+            navTitle: { color: "#94a3b8", fontSize: "13px" },
+            navBtn: { background: "none", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "6px 15px", borderRadius: "6px", cursor: "pointer" },
+            main: { maxWidth: "1000px", margin: "0 auto", padding: "40px 20px" },
+            pageHeader: { display: "flex", gap: 20, alignItems: "center", marginBottom: "30px" },
+            pageHeaderIcon: { fontSize: "32px" },
+            pageTitle: { margin: 0, fontSize: "24px" },
+            pageSubtitle: { margin: 0, color: "#64748b" },
+            card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "24px", marginBottom: "20px" },
+            sectionTitle: { display: "flex", alignItems: "center", gap: 10, fontSize: "14px", fontWeight: "bold", color: "#a5b4fc", marginBottom: "20px" },
+            sectionDot: { width: "8px", height: "8px", background: "#6366f1", borderRadius: "50%" },
+            grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
+            field: { display: "flex", flexDirection: "column", gap: "8px" },
+            label: { fontSize: "12px", color: "#94a3b8", textTransform: "uppercase" },
+            select: { background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.1)", padding: "10px", borderRadius: "8px", color: "#fff", outline: "none" },
+            cargoRow: { display: "flex", gap: "10px", marginBottom: "10px" },
+            btnPrimary: { background: "#4f46e5", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" },
+            btnSecondary: { background: "rgba(99,102,241,0.1)", border: "1px solid #6366f1", color: "#a5b4fc", padding: "8px 16px", borderRadius: "8px", cursor: "pointer" },
+            btnOutline: { background: "none", border: "1px solid rgba(255,255,255,0.2)", color: "#94a3b8", padding: "10px 20px", borderRadius: "8px", cursor: "pointer" },
+            btnDelete: { background: "rgba(239,68,68,0.1)", border: "none", color: "#ef4444", padding: "10px", borderRadius: "8px", cursor: "pointer" },
+            impactBox: { marginTop: "20px", padding: "15px", background: "rgba(99,102,241,0.05)", borderRadius: "8px", borderLeft: "4px solid #6366f1" },
+            impactLabel: { fontSize: "11px", color: "#94a3b8", textTransform: "uppercase" },
+            impactValue: { fontSize: "20px", fontWeight: "bold", marginTop: "5px" },
+            proposalCard: { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", padding: "20px", borderRadius: "12px", marginBottom: "12px", cursor: "pointer" },
+            proposalTitle: { fontSize: "16px", fontWeight: "bold" },
+            proposalMeta: { fontSize: "13px", color: "#64748b", marginTop: "4px" },
+            statusBadge: { display: "inline-block", padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "bold", color: "#fff" },
+            emptyState: { textAlign: "center", padding: "50px", color: "#64748b", border: "2px dashed rgba(255,255,255,0.05)", borderRadius: "12px" }
+        };
 
-  const handleUpdate = (updated) => {
-    setProposals(proposals.map((p) => (p.id === updated.id ? updated : p)));
-    setSelected(updated);
-  };
-
-  return (
-    <div style={styles.root}>
-      {/* Background */}
-      <div style={styles.bg} />
-
-      {/* Nav */}
-      <nav style={styles.nav}>
-        <div style={styles.navBrand}>
-          <div style={styles.navLogo}>AgSUS</div>
-          <span style={styles.navTitle}>Sistema de Propostas de Vagas</span>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button style={{ ...styles.navBtn, ...(page !== "form" ? styles.navBtnActive : {}) }} onClick={() => setPage("list")}>
-            📊 Propostas
-          </button>
-          <button style={{ ...styles.navBtn, ...(page === "form" ? styles.navBtnActive : {}) }} onClick={() => setPage("form")}>
-            + Nova
-          </button>
-        </div>
-      </nav>
-
-      <main style={styles.main}>
-        {page === "list" && (
-          <ProposalsList
-            proposals={proposals}
-            onSelect={(p) => { setSelected(p); setPage("detail"); }}
-            onNew={() => setPage("form")}
-            budget={availableBudget}
-          />
-        )}
-        {page === "form" && (
-          <ProposalForm
-            onSubmit={handleSubmit}
-            onCancel={() => setPage("list")}
-          />
-        )}
-        {page === "detail" && selected && (
-          <div>
-            <button style={{ ...styles.btnOutline, marginBottom: 20 }} onClick={() => setPage("list")}>← Voltar</button>
-            <ProposalDetail
-              proposal={selected}
-              onClose={() => setPage("list")}
-              onUpdate={handleUpdate}
-              budget={availableBudget}
-            />
-          </div>
-        )}
-      </main>
-
-      {/* Detail Modal overlay version */}
-      {false && selected && page === "detail" && (
-        <ProposalDetail proposal={selected} onClose={() => { setSelected(null); setPage("list"); }} onUpdate={handleUpdate} budget={availableBudget} />
-      )}
-    </div>
-  );
-}
-
-// ── STYLES ────────────────────────────────────────────────────────────────
-const styles = {
-  root: {
-    minHeight: "100vh",
-    background: "#0a0e1a",
-    fontFamily: "'Ubuntu', 'Segoe UI', sans-serif",
-    color: "#e2e8f0",
-    position: "relative",
-  },
-  bg: {
-    position: "fixed",
-    inset: 0,
-    background: "radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(34,197,94,0.05) 0%, transparent 50%)",
-    pointerEvents: "none",
-    zIndex: 0,
-  },
-  nav: {
-    position: "sticky",
-    top: 0,
-    zIndex: 100,
-    background: "rgba(10,14,26,0.95)",
-    backdropFilter: "blur(12px)",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    padding: "12px 32px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  navBrand: { display: "flex", alignItems: "center", gap: 12 },
-  navLogo: {
-    background: "linear-gradient(135deg, #22c55e, #3b82f6)",
-    color: "#fff",
-    fontWeight: 700,
-    fontSize: 14,
-    padding: "4px 10px",
-    borderRadius: 6,
-    letterSpacing: 1,
-  },
-  navTitle: { color: "#94a3b8", fontSize: 14 },
-  navBtn: {
-    padding: "7px 16px",
-    borderRadius: 8,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "transparent",
-    color: "#94a3b8",
-    cursor: "pointer",
-    fontSize: 13,
-    fontFamily: "'Ubuntu', sans-serif",
-  },
-  navBtnActive: { background: "rgba(99,102,241,0.15)", borderColor: "rgba(99,102,241,0.4)", color: "#a5b4fc" },
-  main: { maxWidth: 1000, margin: "0 auto", padding: "32px 24px", position: "relative", zIndex: 1 },
-  pageHeader: { display: "flex", alignItems: "center", gap: 16, marginBottom: 28 },
-  pageHeaderIcon: { fontSize: 28 },
-  pageTitle: { margin: 0, fontSize: 22, fontWeight: 700, color: "#f1f5f9" },
-  pageSubtitle: { margin: "4px 0 0", color: "#64748b", fontSize: 14 },
-  card: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-  },
-  sectionTitle: { display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 14, color: "#c7d2fe", marginBottom: 14 },
-  sectionDot: { width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #22c55e)", flexShrink: 0 },
-  grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
-  field: { marginBottom: 14 },
-  label: { display: "block", fontSize: 12, color: "#94a3b8", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600 },
-  select: {
-    width: "100%",
-    padding: "10px 12px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 8,
-    color: "#e2e8f0",
-    fontSize: 14,
-    fontFamily: "'Ubuntu', sans-serif",
-    outline: "none",
-  },
-  selectSm: {
-    width: "100%",
-    padding: "6px 8px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 6,
-    color: "#e2e8f0",
-    fontSize: 12,
-    fontFamily: "'Ubuntu', sans-serif",
-    outline: "none",
-  },
-  textarea: {
-    width: "100%",
-    padding: "10px 12px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 8,
-    color: "#e2e8f0",
-    fontSize: 14,
-    fontFamily: "'Ubuntu', sans-serif",
-    resize: "vertical",
-    outline: "none",
-    boxSizing: "border-box",
-  },
-  inputSm: {
-    padding: "6px 10px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 6,
-    color: "#e2e8f0",
-    fontSize: 13,
-    fontFamily: "'Ubuntu', sans-serif",
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  radioGroup: { display: "flex", gap: 8, flexWrap: "wrap" },
-  radioLabel: {
-    padding: "8px 16px",
-    borderRadius: 8,
-    border: "1px solid rgba(255,255,255,0.1)",
-    cursor: "pointer",
-    fontSize: 13,
-    color: "#94a3b8",
-    background: "rgba(255,255,255,0.02)",
-    transition: "all 0.15s",
-  },
-  radioLabelActive: {
-    background: "rgba(99,102,241,0.2)",
-    borderColor: "rgba(99,102,241,0.5)",
-    color: "#a5b4fc",
-  },
-  attrIndex: {
-    width: 24,
-    height: 24,
-    minWidth: 24,
-    borderRadius: "50%",
-    background: "rgba(99,102,241,0.2)",
-    color: "#a5b4fc",
-    fontSize: 11,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-    fontWeight: 700,
-  },
-  btnDelete: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    border: "none",
-    background: "rgba(239,68,68,0.15)",
-    color: "#ef4444",
-    cursor: "pointer",
-    fontSize: 12,
-    marginTop: 8,
-    flexShrink: 0,
-  },
-  btnPrimary: {
-    padding: "10px 20px",
-    background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-    border: "none",
-    borderRadius: 8,
-    color: "#fff",
-    fontWeight: 600,
-    cursor: "pointer",
-    fontSize: 14,
-    fontFamily: "'Ubuntu', sans-serif",
-  },
-  btnSecondary: {
-    padding: "8px 16px",
-    background: "rgba(99,102,241,0.15)",
-    border: "1px solid rgba(99,102,241,0.3)",
-    borderRadius: 8,
-    color: "#a5b4fc",
-    fontWeight: 600,
-    cursor: "pointer",
-    fontSize: 13,
-    fontFamily: "'Ubuntu', sans-serif",
-  },
-  btnOutline: {
-    padding: "9px 18px",
-    background: "transparent",
-    border: "1px solid rgba(255,255,255,0.12)",
-    borderRadius: 8,
-    color: "#94a3b8",
-    cursor: "pointer",
-    fontSize: 14,
-    fontFamily: "'Ubuntu', sans-serif",
-  },
-  conflictBox: {
-    background: "rgba(245,158,11,0.08)",
-    border: "1px solid rgba(245,158,11,0.3)",
-    borderRadius: 10,
-    padding: 16,
-    marginTop: 12,
-  },
-  conflictTitle: { color: "#fbbf24", fontWeight: 600, fontSize: 13, marginBottom: 10 },
-  conflictItem: { display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8 },
-  conflictTag: {
-    padding: "2px 8px",
-    background: "rgba(245,158,11,0.2)",
-    color: "#fbbf24",
-    borderRadius: 4,
-    fontSize: 11,
-    fontWeight: 700,
-    flexShrink: 0,
-  },
-  conflictText: { color: "#94a3b8", fontSize: 12, lineHeight: 1.5 },
-  cargoTableHeader: {
-    display: "flex",
-    gap: 8,
-    padding: "6px 8px",
-    background: "rgba(255,255,255,0.03)",
-    borderRadius: 6,
-    marginBottom: 8,
-    fontSize: 11,
-    color: "#64748b",
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  cargoRow: {
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-    padding: "8px",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
-  },
-  cargoValue: { fontSize: 13, color: "#94a3b8", textAlign: "right" },
-  impactBox: {
-    background: "rgba(99,102,241,0.08)",
-    border: "1px solid rgba(99,102,241,0.2)",
-    borderRadius: 10,
-    padding: 16,
-    marginTop: 16,
-  },
-  impactGrid: { display: "flex", gap: 24 },
-  impactItem: { flex: 1, paddingLeft: 0 },
-  impactLabel: { color: "#6b7280", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 },
-  impactValue: { color: "#e2e8f0", fontWeight: 700, fontSize: 18, fontFamily: "'Ubuntu', sans-serif" },
-  budgetCard: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-  },
-  budgetBar: {
-    height: 6,
-    background: "rgba(255,255,255,0.06)",
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  budgetFill: {
-    height: "100%",
-    background: "linear-gradient(90deg, #22c55e, #f59e0b, #ef4444)",
-    borderRadius: 3,
-    transition: "width 0.5s ease",
-  },
-  filterChip: {
-    padding: "6px 12px",
-    borderRadius: 20,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.03)",
-    color: "#64748b",
-    cursor: "pointer",
-    fontSize: 12,
-    fontFamily: "'Ubuntu', sans-serif",
-  },
-  filterChipActive: {
-    background: "rgba(99,102,241,0.2)",
-    borderColor: "rgba(99,102,241,0.4)",
-    color: "#a5b4fc",
-  },
-  proposalCard: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.07)",
-    borderRadius: 12,
-    padding: 18,
-    cursor: "pointer",
-    transition: "all 0.15s",
-  },
-  statusDot: { width: 8, height: 8, borderRadius: "50%", flexShrink: 0 },
-  proposalTitle: { fontWeight: 600, fontSize: 15, color: "#f1f5f9" },
-  proposalMeta: { color: "#64748b", fontSize: 12 },
-  proposalCost: { fontWeight: 700, fontSize: 16, color: "#e2e8f0", marginBottom: 4 },
-  statusBadge: {
-    display: "inline-block",
-    padding: "2px 8px",
-    borderRadius: 4,
-    fontSize: 10,
-    color: "#fff",
-    fontWeight: 600,
-  },
-  approvalBadge: {
-    padding: "1px 6px",
-    borderRadius: 4,
-    fontSize: 10,
-    fontWeight: 700,
-  },
-  emptyState: {
-    textAlign: "center",
-    padding: 60,
-    color: "#64748b",
-  },
-  modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.7)",
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    zIndex: 1000,
-    overflowY: "auto",
-    padding: "20px 0",
-  },
-  modal: {
-    width: "min(900px, 95vw)",
-    background: "#0d1220",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 16,
-    display: "flex",
-    flexDirection: "column",
-    maxHeight: "95vh",
-    overflow: "hidden",
-  },
-  modalHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    padding: "20px 24px",
-    borderBottom: "1px solid rgba(255,255,255,0.07)",
-    background: "rgba(99,102,241,0.08)",
-  },
-  modalTitle: { margin: 0, fontSize: 18, fontWeight: 700, color: "#f1f5f9" },
-  modalSubtitle: { margin: "4px 0 0", color: "#64748b", fontSize: 13 },
-  closeBtn: {
-    background: "transparent",
-    border: "none",
-    color: "#64748b",
-    cursor: "pointer",
-    fontSize: 18,
-    padding: 4,
-  },
-  modalBody: { overflowY: "auto", padding: "20px 24px", flex: 1 },
-  modalFooter: {
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: 10,
-    padding: "14px 24px",
-    borderTop: "1px solid rgba(255,255,255,0.07)",
-  },
-  statusChip: {
-    padding: "6px 12px",
-    borderRadius: 20,
-    cursor: "pointer",
-    fontSize: 12,
-    fontFamily: "'Ubuntu', sans-serif",
-    fontWeight: 600,
-    transition: "all 0.15s",
-  },
-  emailBox: {
-    background: "rgba(34,197,94,0.08)",
-    border: "1px solid rgba(34,197,94,0.2)",
-    borderRadius: 10,
-    padding: 14,
-    marginTop: 12,
-  },
-  emailTitle: { color: "#4ade80", fontWeight: 600, fontSize: 13, marginBottom: 10 },
-  emailList: { display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 },
-  emailTag: {
-    padding: "3px 8px",
-    background: "rgba(34,197,94,0.15)",
-    color: "#4ade80",
-    borderRadius: 4,
-    fontSize: 11,
-    fontFamily: "monospace",
-  },
-  approvalGrid: { display: "flex", gap: 10, flexWrap: "wrap" },
-  approvalItem: {
-    flex: 1,
-    minWidth: 100,
-    borderRadius: 10,
-    padding: 14,
-    border: "1px solid rgba(255,255,255,0.06)",
-    textAlign: "center",
-  },
-  approvalName: { color: "#94a3b8", fontWeight: 700, fontSize: 14, marginBottom: 10 },
-  approvalToggle: {
-    padding: "6px 12px",
-    borderRadius: 6,
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: "pointer",
-    display: "inline-block",
-  },
-  commentItem: {
-    background: "rgba(255,255,255,0.03)",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    borderLeft: "3px solid rgba(99,102,241,0.4)",
-  },
-  commentMeta: { color: "#6b7280", fontSize: 11, marginBottom: 4 },
-  commentText: { color: "#94a3b8", fontSize: 13, lineHeight: 1.5 },
-};
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
