@@ -1,0 +1,539 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Plus, List, ChevronRight, Save, Send, ArrowLeft, 
+  CheckCircle2, AlertCircle, Clock, CheckSquare, Square
+} from 'lucide-react';
+
+// --- MOCK DATA BASEADO NO ARQUIVO CSV ---
+const baseCargos = [
+  {
+    id: 1,
+    cargo: "ANALISTA DE GESTAO",
+    salarioBase: 8000.00,
+    auxilioAlimentacao: 1700.00,
+    auxilioBemEstar: 1600.00,
+    insalubridade: 0,
+    periculosidade: 0
+  },
+  {
+    id: 2,
+    cargo: "ASSESSOR DE UNIDADE",
+    salarioBase: 11800.00,
+    auxilioAlimentacao: 1700.00,
+    auxilioBemEstar: 1600.00,
+    insalubridade: 0,
+    periculosidade: 0
+  },
+  {
+    id: 3,
+    cargo: "ASSISTENTE ADMINISTRATIVO",
+    salarioBase: 4500.00,
+    auxilioAlimentacao: 1700.00,
+    auxilioBemEstar: 1600.00,
+    insalubridade: 0,
+    periculosidade: 0
+  }
+];
+
+const statusOptions = [
+  "Em análise pela UFOC",
+  "Aprovado pela UFOC",
+  "Em análise pela SEAR",
+  "Aprovado pela SEAR",
+  "Aguardando validação da DIREX",
+  "Aprovado pela DIREX"
+];
+
+const validationUnits = ["UFOC", "NEISS", "UTIC", "SEAR"];
+
+// Utilitário para formatar moeda
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+};
+
+// Calcula meses restantes no ano (incluindo o mês atual)
+const getRemainingMonths = () => {
+  const currentMonth = new Date().getMonth(); // 0-11
+  return 12 - currentMonth;
+};
+
+export default function App() {
+  const [currentView, setCurrentView] = useState('form'); // 'form', 'list', 'detail'
+  const [requests, setRequests] = useState([]);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+
+  // Estado do formulário de nova solicitação
+  const [formData, setFormData] = useState({
+    proposito: '',
+    atribuicoes: '',
+    cargos: []
+  });
+
+  const [selectedCargoId, setSelectedCargoId] = useState('');
+  const [qtdCargo, setQtdCargo] = useState(1);
+
+  // --- FUNÇÕES DA TELA DE NOVA SOLICITAÇÃO ---
+
+  const handleAddCargo = () => {
+    if (!selectedCargoId || qtdCargo <= 0) return;
+    
+    const cargoData = baseCargos.find(c => c.id === parseInt(selectedCargoId));
+    if (!cargoData) return;
+
+    const existingCargoIndex = formData.cargos.findIndex(c => c.cargoId === cargoData.id);
+    
+    let newCargos = [...formData.cargos];
+    if (existingCargoIndex >= 0) {
+      newCargos[existingCargoIndex].quantidade += parseInt(qtdCargo);
+      newCargos[existingCargoIndex].qtdAprovada = newCargos[existingCargoIndex].quantidade; // Default para edição futura
+    } else {
+      newCargos.push({
+        cargoId: cargoData.id,
+        nome: cargoData.cargo,
+        salarioBase: cargoData.salarioBase,
+        auxilios: cargoData.auxilioAlimentacao + cargoData.auxilioBemEstar + cargoData.insalubridade + cargoData.periculosidade,
+        quantidade: parseInt(qtdCargo),
+        qtdAprovada: parseInt(qtdCargo) // Será usado na tela de edição
+      });
+    }
+
+    setFormData({ ...formData, cargos: newCargos });
+    setSelectedCargoId('');
+    setQtdCargo(1);
+  };
+
+  const handleRemoveCargo = (index) => {
+    const newCargos = formData.cargos.filter((_, i) => i !== index);
+    setFormData({ ...formData, cargos: newCargos });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (formData.cargos.length === 0) {
+      alert("Adicione pelo menos um cargo.");
+      return;
+    }
+
+    const newRequest = {
+      id: `REQ-${Math.floor(Math.random() * 10000)}`,
+      dataCriacao: new Date().toLocaleDateString('pt-BR'),
+      status: statusOptions[0],
+      comentarios: '',
+      validacoes: { UFOC: false, NEISS: false, UTIC: false, SEAR: false },
+      ...formData
+    };
+
+    setRequests([newRequest, ...requests]);
+    setFormData({ proposito: '', atribuicoes: '', cargos: [] });
+    setCurrentView('list');
+  };
+
+  // --- FUNÇÕES DA TELA DE DETALHES/EDIÇÃO ---
+
+  const handleOpenDetail = (req) => {
+    setSelectedRequest(JSON.parse(JSON.stringify(req))); // Deep copy
+    setCurrentView('detail');
+  };
+
+  const handleUpdateApprovedQtd = (index, newValue) => {
+    const updatedRequest = { ...selectedRequest };
+    updatedRequest.cargos[index].qtdAprovada = parseInt(newValue) || 0;
+    setSelectedRequest(updatedRequest);
+  };
+
+  const handleToggleValidation = (unit) => {
+    const updatedRequest = { ...selectedRequest };
+    updatedRequest.validacoes[unit] = !updatedRequest.validacoes[unit];
+    setSelectedRequest(updatedRequest);
+  };
+
+  const handleSaveDetail = () => {
+    const updatedRequests = requests.map(r => 
+      r.id === selectedRequest.id ? selectedRequest : r
+    );
+    setRequests(updatedRequests);
+    setCurrentView('list');
+  };
+
+  const handleSendEmail = () => {
+    // Simulação de envio de email
+    alert(`E-mail de notificação de aprovação enviado com sucesso para: teste@teste.com.br\n\nReferência: ${selectedRequest.id}`);
+  };
+
+  // --- RENDERIZADORES DE TELAS ---
+
+  const renderForm = () => {
+    const mesesRestantes = getRemainingMonths();
+    
+    // Cálculos globais
+    const totalMensal = formData.cargos.reduce((acc, curr) => acc + ((curr.salarioBase + curr.auxilios) * curr.quantidade), 0);
+    const impactoAnual = totalMensal * mesesRestantes;
+
+    return (
+      <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Nova Solicitação de Coordenação</h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Propósito da Coordenação</label>
+              <textarea 
+                required
+                rows="3"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                placeholder="Descreva o propósito principal desta nova coordenação..."
+                value={formData.proposito}
+                onChange={e => setFormData({...formData, proposito: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Atribuições da Coordenação</label>
+              <textarea 
+                required
+                rows="4"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                placeholder="Liste as atribuições e responsabilidades..."
+                value={formData.atribuicoes}
+                onChange={e => setFormData({...formData, atribuicoes: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Quadro de Cargos e Vagas</h3>
+            
+            <div className="flex gap-4 items-end mb-6">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
+                <select 
+                  className="w-full p-2.5 border border-gray-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500"
+                  value={selectedCargoId}
+                  onChange={e => setSelectedCargoId(e.target.value)}
+                >
+                  <option value="">Selecione um cargo da Base...</option>
+                  {baseCargos.map(c => (
+                    <option key={c.id} value={c.id}>{c.cargo}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-32">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  value={qtdCargo}
+                  onChange={e => setQtdCargo(e.target.value)}
+                />
+              </div>
+              <button 
+                type="button"
+                onClick={handleAddCargo}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <Plus size={18} /> Adicionar
+              </button>
+            </div>
+
+            {formData.cargos.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left bg-white rounded-lg overflow-hidden shadow-sm">
+                  <thead className="bg-gray-100 text-gray-700 text-sm">
+                    <tr>
+                      <th className="p-3">Cargo</th>
+                      <th className="p-3 text-center">Qtd</th>
+                      <th className="p-3 text-right">Salário Base</th>
+                      <th className="p-3 text-right">Auxílios</th>
+                      <th className="p-3 text-right">Total Mensal (Item)</th>
+                      <th className="p-3 text-center">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {formData.cargos.map((item, idx) => {
+                      const custoUnitario = item.salarioBase + item.auxilios;
+                      const custoTotalMensal = custoUnitario * item.quantidade;
+                      return (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="p-3 font-medium text-gray-800">{item.nome}</td>
+                          <td className="p-3 text-center">{item.quantidade}</td>
+                          <td className="p-3 text-right">{formatCurrency(item.salarioBase)}</td>
+                          <td className="p-3 text-right">{formatCurrency(item.auxilios)}</td>
+                          <td className="p-3 text-right font-semibold text-blue-600">{formatCurrency(custoTotalMensal)}</td>
+                          <td className="p-3 text-center">
+                            <button type="button" onClick={() => handleRemoveCargo(idx)} className="text-red-500 hover:text-red-700 text-sm font-medium">Remover</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {/* Resumo Financeiro */}
+                <div className="mt-6 bg-blue-50 border border-blue-100 p-4 rounded-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                  <div>
+                    <p className="text-sm text-blue-800">Impacto Mensal Total</p>
+                    <p className="text-2xl font-bold text-blue-900">{formatCurrency(totalMensal)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-blue-800">Impacto até Dezembro ({mesesRestantes} meses restantes)</p>
+                    <p className="text-2xl font-bold text-red-600">{formatCurrency(impactoAnual)}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400 bg-white border border-dashed border-gray-300 rounded-lg">
+                Nenhum cargo adicionado ainda.
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-bold shadow-md transition-colors flex items-center gap-2">
+              <Save size={20} /> Salvar Solicitação
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  };
+
+  const renderList = () => {
+    return (
+      <div className="max-w-5xl mx-auto p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Acompanhamento de Solicitações</h2>
+        
+        {requests.length === 0 ? (
+          <div className="bg-white p-12 text-center rounded-xl shadow-sm border border-gray-100">
+            <Clock size={48} className="mx-auto text-gray-300 mb-4" />
+            <h3 className="text-lg font-medium text-gray-600">Nenhuma solicitação criada</h3>
+            <p className="text-gray-400 mt-2">Crie uma nova solicitação para acompanhá-la aqui.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {requests.map(req => (
+              <div 
+                key={req.id} 
+                className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+                onClick={() => handleOpenDetail(req)}
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">{req.id}</span>
+                    <span className="text-sm text-gray-500">{req.dataCriacao}</span>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 line-clamp-1">{req.proposito}</h3>
+                  <p className="text-sm text-gray-500 mt-1">{req.cargos.length} cargo(s) solicitado(s)</p>
+                </div>
+                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    req.status.includes('Aprovado pela DIREX') ? 'bg-green-100 text-green-800' : 
+                    req.status.includes('Em análise') ? 'bg-yellow-100 text-yellow-800' : 
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {req.status}
+                  </span>
+                  <ChevronRight className="text-gray-400" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderDetail = () => {
+    if (!selectedRequest) return null;
+
+    const isAprovadoDirex = selectedRequest.status === "Aprovado pela DIREX";
+
+    // Recalcular custos baseados nas quantidades APROVADAS
+    const mesesRestantes = getRemainingMonths();
+    const totalMensalSolicitado = selectedRequest.cargos.reduce((acc, curr) => acc + ((curr.salarioBase + curr.auxilios) * curr.quantidade), 0);
+    const totalMensalAprovado = selectedRequest.cargos.reduce((acc, curr) => acc + ((curr.salarioBase + curr.auxilios) * curr.qtdAprovada), 0);
+    
+    return (
+      <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+        <button 
+          onClick={() => setCurrentView('list')}
+          className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-medium mb-6 transition-colors"
+        >
+          <ArrowLeft size={18} /> Voltar para lista
+        </button>
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b pb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+              Solicitação {selectedRequest.id}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">Criada em: {selectedRequest.dataCriacao}</p>
+          </div>
+          
+          <div className="w-full md:w-auto">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Status Atual</label>
+            <select 
+              className="w-full md:w-64 p-2 border-2 border-gray-200 rounded-lg font-semibold text-gray-800 focus:border-blue-500 outline-none"
+              value={selectedRequest.status}
+              onChange={e => setSelectedRequest({...selectedRequest, status: e.target.value})}
+            >
+              {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <h3 className="text-sm font-bold text-gray-500 uppercase mb-2">Propósito</h3>
+            <p className="text-gray-800 bg-gray-50 p-4 rounded-lg">{selectedRequest.proposito}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-gray-500 uppercase mb-2">Atribuições</h3>
+            <p className="text-gray-800 bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">{selectedRequest.atribuicoes}</p>
+          </div>
+        </div>
+
+        {/* Quadro de Validação */}
+        <div className="mb-8">
+          <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Validação das Unidades</h3>
+          <div className="flex flex-wrap gap-4">
+            {validationUnits.map(unit => (
+              <button
+                key={unit}
+                type="button"
+                onClick={() => handleToggleValidation(unit)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
+                  selectedRequest.validacoes[unit] 
+                    ? 'border-green-500 bg-green-50 text-green-700' 
+                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                {selectedRequest.validacoes[unit] ? <CheckSquare size={18} /> : <Square size={18} />}
+                <span className="font-bold">{unit}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-sm font-bold text-gray-500 uppercase mb-3 flex items-center gap-2">
+            Ajuste de Quantitativos <AlertCircle size={16} className="text-blue-500"/>
+          </h3>
+          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="w-full text-left bg-white">
+              <thead className="bg-gray-50 text-gray-700 text-sm border-b">
+                <tr>
+                  <th className="p-3">Cargo</th>
+                  <th className="p-3 text-center">Solicitado</th>
+                  <th className="p-3 text-center bg-blue-50">Aprovado</th>
+                  <th className="p-3 text-right">Custo Mensal Previsto</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {selectedRequest.cargos.map((item, idx) => (
+                  <tr key={idx}>
+                    <td className="p-3 font-medium text-gray-800">{item.nome}</td>
+                    <td className="p-3 text-center font-semibold text-gray-500">{item.quantidade}</td>
+                    <td className="p-3 bg-blue-50">
+                      <input 
+                        type="number" 
+                        min="0"
+                        className="w-20 mx-auto block p-1.5 border border-blue-200 rounded text-center font-bold text-blue-700 outline-none focus:ring-2 focus:ring-blue-500"
+                        value={item.qtdAprovada}
+                        onChange={(e) => handleUpdateApprovedQtd(idx, e.target.value)}
+                      />
+                    </td>
+                    <td className="p-3 text-right text-gray-600">
+                      {formatCurrency((item.salarioBase + item.auxilios) * item.qtdAprovada)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="mt-4 flex flex-col md:flex-row justify-end gap-6 text-sm">
+            <div className="text-right">
+              <span className="text-gray-500 block">Impacto Mensal Original:</span>
+              <span className="font-semibold line-through text-gray-400">{formatCurrency(totalMensalSolicitado)}</span>
+            </div>
+            <div className="text-right bg-green-50 p-3 rounded-lg border border-green-100">
+              <span className="text-green-800 font-bold block">Novo Impacto Mensal (Aprovado):</span>
+              <span className="font-bold text-xl text-green-700">{formatCurrency(totalMensalAprovado)}</span>
+              <span className="block text-xs text-green-600 mt-1">Impacto anual restante: {formatCurrency(totalMensalAprovado * mesesRestantes)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-sm font-bold text-gray-500 uppercase mb-2">Comentários e Pareceres</h3>
+          <textarea 
+            rows="4"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Adicione justificativas para os cortes, pareceres das áreas, etc..."
+            value={selectedRequest.comentarios}
+            onChange={e => setSelectedRequest({...selectedRequest, comentarios: e.target.value})}
+          />
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-6 border-t">
+          <div>
+             {isAprovadoDirex && (
+              <button 
+                onClick={handleSendEmail}
+                className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
+              >
+                <Send size={18} /> Enviar E-mail para RH (teste@teste.com.br)
+              </button>
+            )}
+          </div>
+          <button 
+            onClick={handleSaveDetail}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold shadow-md transition-colors flex items-center gap-2 w-full md:w-auto justify-center"
+          >
+            <CheckCircle2 size={20} /> Salvar Alterações
+          </button>
+        </div>
+
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-12">
+      {/* Header/Nav */}
+      <header className="bg-white border-b border-gray-200 mb-8 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-xl font-black text-blue-900 flex items-center gap-2">
+              <span className="bg-blue-600 text-white p-1.5 rounded-md">
+                <List size={20} />
+              </span>
+              Portal de Vagas
+            </h1>
+            <nav className="flex gap-2">
+              <button 
+                onClick={() => setCurrentView('form')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${currentView === 'form' ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
+              >
+                Nova Solicitação
+              </button>
+              <button 
+                onClick={() => setCurrentView('list')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${currentView === 'list' || currentView === 'detail' ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
+              >
+                Acompanhamento
+              </button>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="px-4">
+        {currentView === 'form' && renderForm()}
+        {currentView === 'list' && renderList()}
+        {currentView === 'detail' && renderDetail()}
+      </main>
+    </div>
+  );
+}
