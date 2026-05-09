@@ -1,291 +1,1096 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgSUS - Sistema de Propostas de Vagas</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Scripts React -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel para traduzir JSX no navegador -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #0a0e1a;
-            font-family: 'Ubuntu', sans-serif;
-            color: #e2e8f0;
-        }
-        /* Estilos base para garantir consistência sem CSS externo */
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 4px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgSUS – Sistema de Propostas de Vagas</title>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0e1a;
+    --surface: rgba(255,255,255,0.03);
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --accent: #6366f1;
+    --accent-light: #a5b4fc;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --orange: #f97316;
+    --purple: #6366f1;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Ubuntu', sans-serif; }
+  button, input, select, textarea { font-family: 'Ubuntu', sans-serif; }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,14,26,0.97); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 12px; }
+  .nav-logo {
+    background: linear-gradient(135deg,#22c55e,#3b82f6); color:#fff;
+    font-weight:700; font-size:13px; padding:4px 10px; border-radius:6px; letter-spacing:1px;
+  }
+  .nav-title { color: var(--muted); font-size: 14px; }
+  .nav-actions { display: flex; gap: 8px; }
+  .nav-btn {
+    padding: 7px 16px; border-radius: 8px;
+    border: 1px solid var(--border2); background: transparent;
+    color: var(--muted); cursor: pointer; font-size: 13px; transition: all .15s;
+  }
+  .nav-btn.active { background: rgba(99,102,241,.15); border-color: rgba(99,102,241,.4); color: var(--accent-light); }
+  .nav-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  /* ── BG GLOW ── */
+  .bg-glow {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(34,197,94,.05) 0%, transparent 50%);
+  }
+
+  /* ── LAYOUT ── */
+  main { max-width: 1000px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 16px;
+  }
+  .section-title {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 14px; color: #c7d2fe; margin-bottom: 14px;
+  }
+  .section-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: linear-gradient(135deg,#6366f1,#22c55e); flex-shrink: 0; display: inline-block;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+  }
+  .page-header-icon { font-size: 28px; }
+  .page-title { font-size: 22px; font-weight: 700; color: #f1f5f9; }
+  .page-subtitle { color: var(--dim); font-size: 14px; margin-top: 4px; }
+
+  /* ── FORM CONTROLS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field { margin-bottom: 14px; }
+  label.lbl {
+    display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
+  }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; padding: 10px 12px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px; color: var(--text); font-size: 14px; outline: none;
+    transition: border-color .15s;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus {
+    border-color: rgba(99,102,241,.5);
+  }
+  select option { background: #1e293b; }
+  textarea { resize: vertical; }
+  input.sm, select.sm {
+    padding: 6px 10px; font-size: 12px; border-radius: 6px;
+  }
+
+  /* ── RADIO GROUP ── */
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-lbl {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
+    cursor: pointer; font-size: 13px; color: var(--muted);
+    background: rgba(255,255,255,.02); transition: all .15s; user-select: none;
+  }
+  .radio-lbl.active {
+    background: rgba(99,102,241,.2); border-color: rgba(99,102,241,.5); color: var(--accent-light);
+  }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    padding: 10px 20px; background: linear-gradient(135deg,#6366f1,#4f46e5);
+    border: none; border-radius: 8px; color: #fff; font-weight: 600;
+    cursor: pointer; font-size: 14px; transition: opacity .15s;
+  }
+  .btn-primary:hover { opacity: .88; }
+  .btn-secondary {
+    padding: 8px 16px; background: rgba(99,102,241,.15);
+    border: 1px solid rgba(99,102,241,.3); border-radius: 8px;
+    color: var(--accent-light); font-weight: 600; cursor: pointer; font-size: 13px;
+  }
+  .btn-outline {
+    padding: 9px 18px; background: transparent;
+    border: 1px solid var(--border2); border-radius: 8px;
+    color: var(--muted); cursor: pointer; font-size: 14px;
+  }
+  .btn-delete {
+    width: 28px; height: 28px; border-radius: 6px; border: none;
+    background: rgba(239,68,68,.15); color: var(--red);
+    cursor: pointer; font-size: 12px; flex-shrink: 0;
+  }
+
+  /* ── ATTRIBUTION ROW ── */
+  .attr-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+  .attr-idx {
+    width: 24px; height: 24px; min-width: 24px; border-radius: 50%;
+    background: rgba(99,102,241,.2); color: var(--accent-light);
+    font-size: 11px; display: flex; align-items: center; justify-content: center;
+    margin-top: 8px; font-weight: 700;
+  }
+
+  /* ── CONFLICT BOX ── */
+  .conflict-box {
+    background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3);
+    border-radius: 10px; padding: 16px; margin-top: 12px;
+  }
+  .conflict-title { color: #fbbf24; font-weight: 600; font-size: 13px; margin-bottom: 10px; }
+  .conflict-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
+  .conflict-tag {
+    padding: 2px 8px; background: rgba(245,158,11,.2); color: #fbbf24;
+    border-radius: 4px; font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .conflict-text { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+  /* ── CARGO TABLE ── */
+  .cargo-header {
+    display: flex; gap: 8px; padding: 6px 8px;
+    background: rgba(255,255,255,.03); border-radius: 6px; margin-bottom: 8px;
+    font-size: 11px; color: var(--dim); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .cargo-row {
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px; border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .cargo-val { font-size: 13px; color: var(--muted); text-align: right; }
+
+  /* ── IMPACT BOX ── */
+  .impact-box {
+    background: rgba(99,102,241,.08); border: 1px solid rgba(99,102,241,.2);
+    border-radius: 10px; padding: 16px; margin-top: 16px;
+  }
+  .impact-grid { display: flex; gap: 24px; flex-wrap: wrap; }
+  .impact-item { flex: 1; min-width: 120px; }
+  .impact-label {
+    color: var(--dim); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .5px; margin-bottom: 4px;
+  }
+  .impact-value { color: var(--text); font-weight: 700; font-size: 18px; }
+  .impact-value.amber { color: var(--amber); }
+  .impact-value.green { color: var(--green); }
+  .impact-value.red { color: var(--red); }
+
+  /* ── BUDGET BAR ── */
+  .budget-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 20px;
+  }
+  .budget-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+  .budget-bar { height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; }
+  .budget-fill {
+    height: 100%; background: linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);
+    border-radius: 3px; transition: width .5s ease;
+  }
+  .budget-legend { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; }
+
+  /* ── FILTER CHIPS ── */
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .chip {
+    padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.03); color: var(--dim);
+    cursor: pointer; font-size: 12px; transition: all .15s; white-space: nowrap;
+  }
+  .chip.active { background: rgba(99,102,241,.2); border-color: rgba(99,102,241,.4); color: var(--accent-light); }
+  .search-input { width: 220px; height: 36px; padding: 0 12px; font-size: 13px; }
+
+  /* ── PROPOSAL CARDS ── */
+  .proposal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px; cursor: pointer;
+    transition: border-color .15s, background .15s; margin-bottom: 12px;
+  }
+  .proposal-card:hover { border-color: rgba(99,102,241,.3); background: rgba(99,102,241,.04); }
+  .proposal-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .proposal-card-left { flex: 1; }
+  .proposal-card-right { text-align: right; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .proposal-title { font-weight: 600; font-size: 15px; color: #f1f5f9; }
+  .proposal-meta { color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .proposal-cost { font-weight: 700; font-size: 16px; color: var(--text); margin-bottom: 4px; }
+  .proposal-cost span { font-size: 11px; color: var(--dim); }
+  .status-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; color: #fff; font-weight: 600;
+  }
+  .proposal-card-footer { display: flex; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--dim); flex-wrap: wrap; align-items: center; }
+  .approval-badge { padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .empty-state { text-align: center; padding: 60px; color: var(--dim); }
+  .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+
+  /* ── DETAIL PAGE ── */
+  .back-btn { margin-bottom: 20px; }
+  .detail-status-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .status-chip {
+    padding: 6px 12px; border-radius: 20px; cursor: pointer;
+    font-size: 12px; font-weight: 600; transition: all .15s; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.05); color: var(--muted);
+  }
+  .status-chip.active { color: #fff; border-color: transparent; }
+
+  /* ── EMAIL BOX ── */
+  .email-box {
+    background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2);
+    border-radius: 10px; padding: 14px; margin-top: 12px;
+  }
+  .email-title { color: #4ade80; font-weight: 600; font-size: 13px; margin-bottom: 10px; }
+  .email-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .email-tag {
+    padding: 3px 8px; background: rgba(34,197,94,.15);
+    color: #4ade80; border-radius: 4px; font-size: 11px; font-family: monospace;
+  }
+
+  /* ── APPROVAL GRID ── */
+  .approval-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+  .approval-item {
+    flex: 1; min-width: 100px; border-radius: 10px; padding: 14px;
+    border: 1px solid rgba(255,255,255,.06); text-align: center;
+    transition: background .2s;
+  }
+  .approval-item.approved { background: rgba(34,197,94,.1); }
+  .approval-name { color: var(--muted); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .approval-toggle {
+    padding: 6px 12px; border-radius: 6px; color: #fff;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    display: inline-block; transition: background .2s;
+  }
+
+  /* ── COMMENTS ── */
+  .comment-item {
+    background: rgba(255,255,255,.03); border-radius: 8px; padding: 12px;
+    margin-bottom: 8px; border-left: 3px solid rgba(99,102,241,.4);
+  }
+  .comment-meta { color: var(--dim); font-size: 11px; margin-bottom: 4px; }
+  .comment-text { color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .comment-form { display: flex; gap: 8px; margin-top: 8px; }
+  .comment-form input { flex: 1; height: 40px; }
+
+  /* ── CARGO DETAIL TABLE ── */
+  .cargo-detail-row {
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px; border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: #1e293b; border: 1px solid rgba(34,197,94,.4);
+    color: #4ade80; padding: 12px 20px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; opacity: 0;
+    transform: translateY(8px); transition: all .3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    nav { padding: 12px 16px; }
+    main { padding: 20px 16px; }
+    .impact-grid { flex-direction: column; gap: 12px; }
+  }
+</style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+<div class="bg-glow"></div>
 
-        // ── DADOS E CONSTANTES ──────────────────────────────────────────────────
-        const CARGO_DATA = {
-            "ANALISTA DE GESTAO": { salario: 9626, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ANALISTA DE GESTÃO": { salario: 8000, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ANALISTA GESTÃO": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ANALISTA TECNICO": { salario: 8000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "ANALISTA ADMINISTRATIVO": { salario: 5400, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "ASSESSOR DA PRESIDENCIA": { salario: 14800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ASSESSOR DE DIRETORIA": { salario: 12800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ASSESSOR DE INSTANCIA": { salario: 12800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ASSESSOR DE UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ASSESSOR UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ASSESSOR ESPECIALISTA": { salario: 17700, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "ASSESSOR SI": { salario: 11000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "AUXILIAR DE GESTAO": { salario: 4000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "AUXILIAR DE GESTÃO": { salario: 3000, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "CHEFE DE GABINETE": { salario: 18869, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "COORDENADOR": { salario: 14800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "COORDENADOR DE PROJETO": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "COORDENADOR DE REGIONAL": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "COORDENADOR INTERFEDERATIVO": { salario: 14800, alimentacao: 1600, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "DIRETOR": { salario: 33546, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "DIRETOR PRESIDENTE": { salario: 36690, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "GESTOR EXECUTIVO": { salario: 23063, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "GESTOR DE PROJETOS": { salario: 18869, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ASSISTENTE DE PROJETO": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ASSISTENTE DE UNIDADE": { salario: 11800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "PSICOLOGO AGENCIA": { salario: 8800, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "AGENTE DE PROJETO": { salario: 4000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "APRENDIZ": { salario: 1000, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ENGENHEIRO DE SEGURANCA DO TRABALHO": { salario: 6439, alimentacao: 1700, bemEstar: 1600, insalubridade: 0, periculosidade: 0 },
-            "ADVOGADO": { salario: 10800, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "CONTADOR": { salario: 7060, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "ADMINISTRADOR": { salario: 7060, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "ASSISTENTE ADMINISTRATIVO": { salario: 4800, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "AUXILIAR ADMINISTRATIVO": { salario: 2900, alimentacao: 950, bemEstar: 0, insalubridade: 162, periculosidade: 0 },
-            "ASSESSOR DE IMPRENSA": { salario: 5000, alimentacao: 840, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "PEDAGOGO": { salario: 7060, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "ENFERMEIRO": { salario: 7446, alimentacao: 1075, bemEstar: 400, insalubridade: 324, periculosidade: 0 },
-            "MEDICO": { salario: 15080, alimentacao: 1200, bemEstar: 800, insalubridade: 324, periculosidade: 0 },
-            "PSICOLOGO": { salario: 7060, alimentacao: 950, bemEstar: 0, insalubridade: 324, periculosidade: 0 },
-            "ENGENHEIRO CIVIL": { salario: 12903, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-            "ARQUITETO E URBANISTA": { salario: 12903, alimentacao: 800, bemEstar: 0, insalubridade: 0, periculosidade: 0 },
-        };
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">AgSUS</div>
+    <span class="nav-title">Sistema de Propostas de Vagas</span>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-btn active" id="nav-list" onclick="showPage('list')">📊 Propostas</button>
+    <button class="nav-btn" id="nav-form" onclick="showPage('form')">+ Nova</button>
+  </div>
+</nav>
 
-        const ORG_STRUCTURE = {
-            "Presidência (PRES)": { units: ["Gabinete da Presidência (GAB)", "Secretaria Executiva e de Articulação (SEAR)", "Unidade de Integridade (UINT)", "Unidade Jurídica (UJUR)", "Unidade de Comunicação (UCOM)", "Unidade de Finanças, Orçamento, Contabilidade e Prestação de Contas (UFOC)", "Unidade de Planejamento e Gestão Estratégica (UPGE)"] },
-            "Diretoria de Atenção Integral à Saúde (DAIS)": { units: ["Unidade de Saúde Indígena (USI)", "Unidade de Atenção Primária à Saúde (UAPS)", "Unidade de Atenção Especializada (UAE)", "Unidade de Monitoramento e Avaliação (UMA)", "Unidade de Projetos e Inovação (UPI)", "Unidade de Ensino e Pesquisa (UEP)", "Unidade de Transformação Digital em Saúde (UDIGIS)"] },
-            "Diretoria de Operações (DIOP)": { units: ["Unidade de Gestão de Pessoas (UGP)", "Unidade de Aquisições e Contratos (UAC)", "Unidade de Logística, Suprimentos e Patrimônio (ULOG)", "Unidade de Infraestrutura (UINFRA)", "Unidade de Tecnologia da Informação e Comunicação (UTIC)"] }
-        };
+<main>
 
-        const STATUSES = ["Em análise pela UFOC", "Aprovado pela UFOC", "Em análise pela SEAR", "Aprovado pela SEAR", "Aguardando validação da DIREX", "Aprovado pela DIREX"];
-        const STATUS_COLORS = { "Em análise pela UFOC": "#f59e0b", "Aprovado pela UFOC": "#10b981", "Em análise pela SEAR": "#3b82f6", "Aprovado pela SEAR": "#6366f1", "Aguardando validação da DIREX": "#f97316", "Aprovado pela DIREX": "#22c55e" };
+  <!-- ══ PAGE: LIST ══ -->
+  <div class="page active" id="page-list">
+    <div class="page-header">
+      <div class="page-header-icon">📊</div>
+      <div style="flex:1">
+        <div class="page-title">Propostas de Coordenação</div>
+        <div class="page-subtitle" id="list-count">0 proposta(s) registrada(s)</div>
+      </div>
+      <button class="btn-primary" onclick="showPage('form')">+ Nova Proposta</button>
+    </div>
 
-        const formatCurrency = (val) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
+    <!-- Budget -->
+    <div class="budget-card">
+      <div class="budget-row">
+        <span style="color:var(--muted)">Orçamento Anual de Pessoal</span>
+        <span id="budget-available" style="font-weight:700">R$ 30.000.000,00 disponível</span>
+      </div>
+      <div class="budget-bar"><div class="budget-fill" id="budget-fill" style="width:0%"></div></div>
+      <div class="budget-legend">
+        <span style="color:var(--red)" id="budget-used">Comprometido: R$ 0,00</span>
+        <span style="color:var(--green)">Total: R$ 30.000.000,00</span>
+      </div>
+    </div>
 
-        function calcMonthlyTotal(cargos) {
-            return cargos.reduce((sum, c) => {
-                if (!c.cargo || !c.quantidade) return sum;
-                const data = CARGO_DATA[c.cargo];
-                if (!data) return sum;
-                const qtd = Number(c.quantidade) || 0;
-                return sum + (data.salario + data.alimentacao + data.bemEstar + data.insalubridade + data.periculosidade) * qtd;
-            }, 0);
-        }
+    <!-- Filters -->
+    <div class="filter-row">
+      <input type="text" class="search-input" placeholder="🔍 Buscar proposta..." oninput="renderList()" id="search-input">
+      <button class="chip active" onclick="setFilter('Todos',this)">Todos</button>
+      <button class="chip" onclick="setFilter('Em análise pela UFOC',this)">Em análise UFOC</button>
+      <button class="chip" onclick="setFilter('Aprovado pela UFOC',this)">Aprovado UFOC</button>
+      <button class="chip" onclick="setFilter('Em análise pela SEAR',this)">Em análise SEAR</button>
+      <button class="chip" onclick="setFilter('Aprovado pela SEAR',this)">Aprovado SEAR</button>
+      <button class="chip" onclick="setFilter('Aguardando validação da DIREX',this)">Ag. DIREX</button>
+      <button class="chip" onclick="setFilter('Aprovado pela DIREX',this)">Aprovado DIREX</button>
+    </div>
 
-        function calcYearImpact(cargos, requestDate) {
-            const now = requestDate ? new Date(requestDate) : new Date();
-            const endOfYear = new Date(now.getFullYear(), 11, 31);
-            const months = Math.max(1, Math.ceil((endOfYear - now) / (1000 * 60 * 60 * 24 * 30.44)));
-            return calcMonthlyTotal(cargos) * months;
-        }
+    <!-- Cards -->
+    <div id="proposals-list"></div>
+  </div>
 
-        // ── COMPONENTES ─────────────────────────────────────────────────────────
+  <!-- ══ PAGE: FORM ══ -->
+  <div class="page" id="page-form">
+    <div class="page-header">
+      <div class="page-header-icon">📋</div>
+      <div>
+        <div class="page-title">Nova Solicitação de Criação de Coordenação</div>
+        <div class="page-subtitle">Preencha os dados abaixo para solicitar a criação e liberação de vagas</div>
+      </div>
+    </div>
 
-        function ProposalForm({ onSubmit, onCancel }) {
-            const [diretoria, setDiretoria] = useState("");
-            const [unidade, setUnidade] = useState("");
-            const [proposito, setProposito] = useState("");
-            const [atribuicoes, setAtribuicoes] = useState([""]);
-            const [cargos, setCargos] = useState([{ cargo: "", quantidade: 1 }]);
-            const [localizacao, setLocalizacao] = useState("Sede");
+    <!-- Org -->
+    <div class="card">
+      <div class="section-title"><span class="section-dot"></span>Identificação Organizacional</div>
+      <div class="grid-2">
+        <div class="field">
+          <label class="lbl">Diretoria *</label>
+          <select id="f-diretoria" onchange="updateUnidades()">
+            <option value="">Selecione a Diretoria</option>
+            <option>Presidência (PRES)</option>
+            <option>Diretoria de Atenção Integral à Saúde (DAIS)</option>
+            <option>Diretoria de Operações (DIOP)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="lbl">Unidade *</label>
+          <select id="f-unidade">
+            <option value="">Selecione a Unidade</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Localização da Coordenação *</label>
+        <div class="radio-group" id="radio-loc">
+          <label class="radio-lbl active" onclick="setLoc('Sede',this)">🏢 Sede</label>
+          <label class="radio-lbl" onclick="setLoc('Cowork 1',this)">🏛️ Cowork 1</label>
+          <label class="radio-lbl" onclick="setLoc('Cowork 2',this)">🏛️ Cowork 2</label>
+          <label class="radio-lbl" onclick="setLoc('Home Office',this)">🏠 Home Office</label>
+        </div>
+      </div>
+    </div>
 
-            const units = diretoria ? ORG_STRUCTURE[diretoria]?.units || [] : [];
-            const monthlyTotal = calcMonthlyTotal(cargos);
+    <!-- Propósito -->
+    <div class="card">
+      <div class="section-title"><span class="section-dot"></span>Propósito da Coordenação</div>
+      <div class="field">
+        <label class="lbl">Propósito *</label>
+        <textarea id="f-proposito" rows="4" placeholder="Descreva o propósito e objetivos estratégicos da coordenação..."></textarea>
+      </div>
+    </div>
 
-            return (
-                <div style={{ maxWidth: 860, margin: "0 auto" }}>
-                    <div style={styles.pageHeader}>
-                        <div style={styles.pageHeaderIcon}>📋</div>
-                        <div>
-                            <h2 style={styles.pageTitle}>Nova Solicitação de Vagas</h2>
-                            <p style={styles.pageSubtitle}>Preencha para análise orçamentária</p>
-                        </div>
-                    </div>
-                    <form onSubmit={(e) => { e.preventDefault(); onSubmit({ diretoria, unidade, proposito, atribuicoes, cargos, localizacao, status: "Em análise pela UFOC", requestDate: new Date().toISOString(), approvals: { UFOC: false, SEAR: false, UTIC: false }, comments: [] }); }}>
-                        <div style={styles.card}>
-                            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Organização</div>
-                            <div style={styles.grid2}>
-                                <div style={styles.field}>
-                                    <label style={styles.label}>Diretoria</label>
-                                    <select style={styles.select} value={diretoria} onChange={(e) => { setDiretoria(e.target.value); setUnidade(""); }} required>
-                                        <option value="">Selecione...</option>
-                                        {Object.keys(ORG_STRUCTURE).map(d => <option key={d} value={d}>{d}</option>)}
-                                    </select>
-                                </div>
-                                <div style={styles.field}>
-                                    <label style={styles.label}>Unidade</label>
-                                    <select style={styles.select} value={unidade} onChange={(e) => setUnidade(e.target.value)} required disabled={!diretoria}>
-                                        <option value="">Selecione...</option>
-                                        {units.map(u => <option key={u} value={u}>{u}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+    <!-- Atribuições -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="section-title" style="margin-bottom:0"><span class="section-dot"></span>Atribuições</div>
+        <button class="btn-secondary" onclick="addAttr()">+ Adicionar Atribuição</button>
+      </div>
+      <div id="attrs-container"></div>
+      <div id="conflicts-box" class="conflict-box" style="display:none"></div>
+    </div>
 
-                        <div style={styles.card}>
-                            <div style={styles.sectionTitle}><span style={styles.sectionDot} />Composição de Cargos</div>
-                            {cargos.map((c, i) => (
-                                <div key={i} style={styles.cargoRow}>
-                                    <select style={{...styles.select, flex: 3}} value={c.cargo} onChange={(e) => { const n = [...cargos]; n[i].cargo = e.target.value; setCargos(n); }}>
-                                        <option value="">Selecionar Cargo...</option>
-                                        {Object.keys(CARGO_DATA).map(name => <option key={name} value={name}>{name}</option>)}
-                                    </select>
-                                    <input type="number" style={{...styles.select, flex: 1}} value={c.quantidade} onChange={(e) => { const n = [...cargos]; n[i].quantidade = e.target.value; setCargos(n); }} />
-                                    {cargos.length > 1 && <button type="button" onClick={() => setCargos(cargos.filter((_, idx) => idx !== i))} style={styles.btnDelete}>✕</button>}
-                                </div>
-                            ))}
-                            <button type="button" onClick={() => setCargos([...cargos, { cargo: "", quantidade: 1 }])} style={{...styles.btnSecondary, marginTop: 10}}>+ Adicionar</button>
-                            <div style={styles.impactBox}>
-                                <div style={styles.impactLabel}>Custo Mensal Estimado</div>
-                                <div style={styles.impactValue}>{formatCurrency(monthlyTotal)}</div>
-                            </div>
-                        </div>
-                        <div style={{display: "flex", gap: 10, justifyContent: "flex-end"}}>
-                            <button type="button" onClick={onCancel} style={styles.btnOutline}>Cancelar</button>
-                            <button type="submit" style={styles.btnPrimary}>Enviar Proposta</button>
-                        </div>
-                    </form>
-                </div>
-            );
-        }
+    <!-- Cargos -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="section-title" style="margin-bottom:0"><span class="section-dot"></span>Composição de Cargos</div>
+        <button class="btn-secondary" onclick="addCargo()">+ Adicionar Cargo</button>
+      </div>
+      <div class="cargo-header">
+        <div style="flex:3">Cargo</div>
+        <div style="flex:1">Qtd.</div>
+        <div style="flex:2">Salário Base</div>
+        <div style="flex:2">Aux. Alimentação</div>
+        <div style="flex:2">Aux. Bem Estar</div>
+        <div style="flex:2">Outros</div>
+        <div style="flex:2">Total/cargo</div>
+        <div style="width:32px"></div>
+      </div>
+      <div id="cargos-container"></div>
+      <div class="impact-box">
+        <div class="impact-grid">
+          <div class="impact-item">
+            <div class="impact-label">Total Mensal</div>
+            <div class="impact-value" id="f-monthly">R$ 0,00</div>
+          </div>
+          <div class="impact-item" style="border-left:2px solid rgba(99,102,241,.3);padding-left:24px">
+            <div class="impact-label">Meses restantes</div>
+            <div class="impact-value" id="f-months">—</div>
+          </div>
+          <div class="impact-item" style="border-left:2px solid rgba(99,102,241,.3);padding-left:24px">
+            <div class="impact-label">Impacto até Dez/<span id="f-year"></span></div>
+            <div class="impact-value amber" id="f-year-impact">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        function ProposalsList({ proposals, onSelect, onNew }) {
-            return (
-                <div>
-                    <div style={styles.pageHeader}>
-                        <div style={styles.pageHeaderIcon}>📊</div>
-                        <div style={{flex: 1}}>
-                            <h2 style={styles.pageTitle}>Dashboard de Propostas</h2>
-                            <p style={styles.pageSubtitle}>{proposals.length} solicitações em andamento</p>
-                        </div>
-                        <button onClick={onNew} style={styles.btnPrimary}>+ Nova Proposta</button>
-                    </div>
-                    {proposals.length === 0 ? (
-                        <div style={styles.emptyState}>Nenhuma proposta cadastrada ainda.</div>
-                    ) : (
-                        proposals.map((p, i) => (
-                            <div key={i} style={styles.proposalCard} onClick={() => onSelect(p)}>
-                                <div style={{display: "flex", justifyContent: "space-between"}}>
-                                    <div>
-                                        <div style={styles.proposalTitle}>{p.unidade}</div>
-                                        <div style={styles.proposalMeta}>{p.diretoria}</div>
-                                    </div>
-                                    <div style={{textAlign: "right"}}>
-                                        <div style={{...styles.statusBadge, background: STATUS_COLORS[p.status]}}>{p.status}</div>
-                                        <div style={{marginTop: 5, fontSize: 14, fontWeight: 'bold'}}>{formatCurrency(calcMonthlyTotal(p.cargos))}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            );
-        }
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+      <button class="btn-outline" onclick="showPage('list')">Cancelar</button>
+      <button class="btn-primary" onclick="submitForm()">Enviar Proposta →</button>
+    </div>
+  </div>
 
-        // ── COMPONENTE PRINCIPAL ────────────────────────────────────────────────
-        function App() {
-            const [page, setPage] = useState("list");
-            const [proposals, setProposals] = useState([]);
-            const [selected, setSelected] = useState(null);
+  <!-- ══ PAGE: DETAIL ══ -->
+  <div class="page" id="page-detail">
+    <button class="btn-outline back-btn" onclick="showPage('list')">← Voltar</button>
 
-            return (
-                <div style={styles.root}>
-                    <div style={styles.bg} />
-                    <nav style={styles.nav}>
-                        <div style={styles.navBrand}>
-                            <div style={styles.navLogo}>AgSUS</div>
-                            <span style={styles.navTitle}>Gestão de Vagas v2.0</span>
-                        </div>
-                        <button style={styles.navBtn} onClick={() => setPage("list")}>Início</button>
-                    </nav>
-                    <main style={styles.main}>
-                        {page === "list" && <ProposalsList proposals={proposals} onNew={() => setPage("form")} onSelect={(p) => { setSelected(p); setPage("detail"); }} />}
-                        {page === "form" && <ProposalForm onCancel={() => setPage("list")} onSubmit={(data) => { setProposals([...proposals, data]); setPage("list"); }} />}
-                        {page === "detail" && selected && (
-                            <div>
-                                <button style={styles.btnOutline} onClick={() => setPage("list")}>← Voltar</button>
-                                <div style={{...styles.card, marginTop: 20}}>
-                                    <h2>{selected.unidade}</h2>
-                                    <p>{selected.proposito}</p>
-                                    <div style={{...styles.statusBadge, background: STATUS_COLORS[selected.status]}}>{selected.status}</div>
-                                    <hr style={{opacity: 0.1, margin: '20px 0'}} />
-                                    <h4>Cargos Solicitados:</h4>
-                                    {selected.cargos.map((c, idx) => (
-                                        <div key={idx} style={{padding: '5px 0'}}>{c.quantidade}x {c.cargo}</div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </main>
-                </div>
-            );
-        }
+    <div class="page-header">
+      <div class="page-header-icon">🗂️</div>
+      <div>
+        <div class="page-title" id="d-title">—</div>
+        <div class="page-subtitle" id="d-subtitle">—</div>
+      </div>
+    </div>
 
-        // ── ESTILOS EM JAVASCRIPT ───────────────────────────────────────────────
-        const styles = {
-            root: { minHeight: "100vh", position: "relative", zIndex: 1 },
-            bg: { position: "fixed", inset: 0, background: "radial-gradient(circle at 20% 30%, rgba(99,102,241,0.05), transparent), #0a0e1a", zIndex: -1 },
-            nav: { padding: "15px 30px", background: "rgba(13,18,32,0.8)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0 },
-            navBrand: { display: "flex", alignItems: "center", gap: 15 },
-            navLogo: { background: "linear-gradient(135deg, #22c55e, #3b82f6)", padding: "5px 12px", borderRadius: "6px", fontWeight: "bold", fontSize: "14px" },
-            navTitle: { color: "#94a3b8", fontSize: "13px" },
-            navBtn: { background: "none", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "6px 15px", borderRadius: "6px", cursor: "pointer" },
-            main: { maxWidth: "1000px", margin: "0 auto", padding: "40px 20px" },
-            pageHeader: { display: "flex", gap: 20, alignItems: "center", marginBottom: "30px" },
-            pageHeaderIcon: { fontSize: "32px" },
-            pageTitle: { margin: 0, fontSize: "24px" },
-            pageSubtitle: { margin: 0, color: "#64748b" },
-            card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "24px", marginBottom: "20px" },
-            sectionTitle: { display: "flex", alignItems: "center", gap: 10, fontSize: "14px", fontWeight: "bold", color: "#a5b4fc", marginBottom: "20px" },
-            sectionDot: { width: "8px", height: "8px", background: "#6366f1", borderRadius: "50%" },
-            grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
-            field: { display: "flex", flexDirection: "column", gap: "8px" },
-            label: { fontSize: "12px", color: "#94a3b8", textTransform: "uppercase" },
-            select: { background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.1)", padding: "10px", borderRadius: "8px", color: "#fff", outline: "none" },
-            cargoRow: { display: "flex", gap: "10px", marginBottom: "10px" },
-            btnPrimary: { background: "#4f46e5", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" },
-            btnSecondary: { background: "rgba(99,102,241,0.1)", border: "1px solid #6366f1", color: "#a5b4fc", padding: "8px 16px", borderRadius: "8px", cursor: "pointer" },
-            btnOutline: { background: "none", border: "1px solid rgba(255,255,255,0.2)", color: "#94a3b8", padding: "10px 20px", borderRadius: "8px", cursor: "pointer" },
-            btnDelete: { background: "rgba(239,68,68,0.1)", border: "none", color: "#ef4444", padding: "10px", borderRadius: "8px", cursor: "pointer" },
-            impactBox: { marginTop: "20px", padding: "15px", background: "rgba(99,102,241,0.05)", borderRadius: "8px", borderLeft: "4px solid #6366f1" },
-            impactLabel: { fontSize: "11px", color: "#94a3b8", textTransform: "uppercase" },
-            impactValue: { fontSize: "20px", fontWeight: "bold", marginTop: "5px" },
-            proposalCard: { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", padding: "20px", borderRadius: "12px", marginBottom: "12px", cursor: "pointer" },
-            proposalTitle: { fontSize: "16px", fontWeight: "bold" },
-            proposalMeta: { fontSize: "13px", color: "#64748b", marginTop: "4px" },
-            statusBadge: { display: "inline-block", padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "bold", color: "#fff" },
-            emptyState: { textAlign: "center", padding: "50px", color: "#64748b", border: "2px dashed rgba(255,255,255,0.05)", borderRadius: "12px" }
-        };
+    <!-- Status -->
+    <div class="card">
+      <div class="section-title"><span class="section-dot"></span>Status da Proposta</div>
+      <div class="detail-status-chips" id="d-status-chips"></div>
+      <div id="d-email-box" class="email-box" style="display:none">
+        <div class="email-title">📧 Notificar equipes sobre aprovação</div>
+        <div class="email-tags">
+          <span class="email-tag">coadi@teste.com.br</span>
+          <span class="email-tag">ufoc@teste</span>
+          <span class="email-tag">ugp@teste</span>
+          <span class="email-tag">uinfra@teste</span>
+          <span class="email-tag">utic@teste</span>
+        </div>
+        <button class="btn-primary" onclick="sendEmail()">Enviar notificação</button>
+      </div>
+    </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+    <!-- Approvals -->
+    <div class="card">
+      <div class="section-title"><span class="section-dot"></span>Validação por Unidade</div>
+      <div class="approval-grid" id="d-approvals"></div>
+    </div>
+
+    <!-- Conflicts -->
+    <div id="d-conflicts" style="margin-bottom:16px;display:none"></div>
+
+    <!-- Cargos detail -->
+    <div class="card">
+      <div class="section-title"><span class="section-dot"></span>Cargos Solicitados vs. Aprovados</div>
+      <div class="cargo-header">
+        <div style="flex:3">Cargo</div>
+        <div style="flex:1">Solicitado</div>
+        <div style="flex:1">Aprovado</div>
+        <div style="flex:2">Custo/mês</div>
+      </div>
+      <div id="d-cargos"></div>
+      <div class="impact-box">
+        <div class="impact-grid">
+          <div class="impact-item">
+            <div class="impact-label">Total Mensal Aprovado</div>
+            <div class="impact-value" id="d-monthly">R$ 0,00</div>
+          </div>
+          <div class="impact-item" style="border-left:2px solid rgba(99,102,241,.3);padding-left:24px">
+            <div class="impact-label">Impacto até fim do ano</div>
+            <div class="impact-value amber" id="d-year-impact">R$ 0,00</div>
+          </div>
+          <div class="impact-item" style="border-left:2px solid rgba(99,102,241,.3);padding-left:24px">
+            <div class="impact-label">Saldo Orçamentário</div>
+            <div class="impact-value" id="d-budget-balance">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Propósito & Atribuições -->
+    <div class="card">
+      <div class="section-title"><span class="section-dot"></span>Propósito</div>
+      <p id="d-proposito" style="color:var(--muted);line-height:1.6;font-size:14px"></p>
+      <div id="d-attrs-section" style="display:none">
+        <div class="section-title" style="margin-top:16px"><span class="section-dot"></span>Atribuições</div>
+        <ul id="d-attrs" style="padding-left:20px;color:var(--muted);line-height:1.8;font-size:13px"></ul>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="card">
+      <div class="section-title"><span class="section-dot"></span>Comentários e Ajustes</div>
+      <div id="d-comments"></div>
+      <div class="comment-form">
+        <input type="text" id="d-comment-input" placeholder="Adicionar comentário ou ajuste..." onkeydown="if(event.key==='Enter')addComment()">
+        <button class="btn-secondary" onclick="addComment()">Adicionar</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">
+      <button class="btn-outline" onclick="showPage('list')">Fechar</button>
+      <button class="btn-primary" onclick="saveDetail()">Salvar Alterações</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────────────────
+const CARGO_DATA = {
+  "ANALISTA DE GESTAO":            {salario:9626,  alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ANALISTA DE GESTÃO":            {salario:8000,  alimentacao:1600, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ANALISTA GESTÃO":               {salario:8800,  alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ANALISTA TECNICO":              {salario:8000,  alimentacao:840,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ANALISTA ADMINISTRATIVO":       {salario:5400,  alimentacao:840,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ASSESSOR DA PRESIDENCIA":       {salario:14800, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ASSESSOR DE DIRETORIA":         {salario:12800, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ASSESSOR DE INSTANCIA":         {salario:12800, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ASSESSOR DE UNIDADE":           {salario:11800, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ASSESSOR UNIDADE":              {salario:11800, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ASSESSOR ESPECIALISTA":         {salario:17700, alimentacao:840,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ASSESSOR SI":                   {salario:11000, alimentacao:840,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "AUXILIAR DE GESTAO":            {salario:4000,  alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "AUXILIAR DE GESTÃO":            {salario:3000,  alimentacao:1600, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "AUXILIAR ADMINISTRATIVO":       {salario:2900,  alimentacao:950,  bemEstar:0,    insalubridade:162, periculosidade:0},
+  "ASSISTENTE ADMINISTRATIVO":     {salario:4800,  alimentacao:800,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ASSISTENTE DE PROJETO":         {salario:8800,  alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ASSISTENTE DE UNIDADE":         {salario:11800, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "CHEFE DE GABINETE":             {salario:18869, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "COORDENADOR":                   {salario:14800, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "COORDENADOR DE PROJETO":        {salario:14800, alimentacao:1600, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "COORDENADOR DE REGIONAL":       {salario:14800, alimentacao:1600, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "COORDENADOR INTERFEDERATIVO":   {salario:14800, alimentacao:1600, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "DIRETOR":                       {salario:33546, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "DIRETOR PRESIDENTE":            {salario:36690, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "GESTOR EXECUTIVO":              {salario:23063, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "GESTOR DE PROJETOS":            {salario:18869, alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "GESTOR DE SERVICOS":            {salario:18869, alimentacao:1600, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "PSICOLOGO AGENCIA":             {salario:8800,  alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "AGENTE DE PROJETO":             {salario:4000,  alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "APRENDIZ":                      {salario:1000,  alimentacao:1700, bemEstar:1600, insalubridade:0,   periculosidade:0},
+  "ADVOGADO":                      {salario:10800, alimentacao:840,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "CONTADOR":                      {salario:7060,  alimentacao:840,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ADMINISTRADOR":                 {salario:7060,  alimentacao:840,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ASSESSOR DE IMPRENSA":          {salario:5000,  alimentacao:840,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "PEDAGOGO":                      {salario:7060,  alimentacao:800,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ENFERMEIRO":                    {salario:7446,  alimentacao:1075, bemEstar:400,  insalubridade:324, periculosidade:0},
+  "MEDICO":                        {salario:15080, alimentacao:1200, bemEstar:800,  insalubridade:324, periculosidade:0},
+  "PSICOLOGO":                     {salario:7060,  alimentacao:950,  bemEstar:0,    insalubridade:324, periculosidade:0},
+  "ENGENHEIRO CIVIL":              {salario:12903, alimentacao:800,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ARQUITETO E URBANISTA":         {salario:12903, alimentacao:800,  bemEstar:0,    insalubridade:0,   periculosidade:0},
+  "ENGENHEIRO DE SEGURANCA DO TRABALHO": {salario:6439, alimentacao:1700, bemEstar:1600, insalubridade:0, periculosidade:0},
+  "TECNICO DE ENFERMAGEM":         {salario:3053,  alimentacao:1167, bemEstar:800,  insalubridade:324, periculosidade:0},
+  "CIRURGIAO DENTISTA":            {salario:6265,  alimentacao:800,  bemEstar:0,    insalubridade:324, periculosidade:0},
+  "FARMACEUTICO":                  {salario:7060,  alimentacao:800,  bemEstar:0,    insalubridade:324, periculosidade:0},
+  "NUTRICIONISTA":                 {salario:7060,  alimentacao:950,  bemEstar:0,    insalubridade:324, periculosidade:0},
+  "FISIOTERAPEUTA":                {salario:7060,  alimentacao:800,  bemEstar:0,    insalubridade:324, periculosidade:0},
+  "ASSISTENTE SOCIAL":             {salario:7060,  alimentacao:950,  bemEstar:0,    insalubridade:324, periculosidade:0},
+  "BIOLOGO":                       {salario:7060,  alimentacao:800,  bemEstar:0,    insalubridade:324, periculosidade:0},
+  "SANITARISTA":                   {salario:7060,  alimentacao:800,  bemEstar:0,    insalubridade:324, periculosidade:0},
+};
+
+const ORG_STRUCTURE = {
+  "Presidência (PRES)": ["Gabinete da Presidência (GAB)","Secretaria Executiva e de Articulação (SEAR)","Unidade de Integridade (UINT)","Unidade Jurídica (UJUR)","Unidade de Comunicação (UCOM)","Unidade de Finanças, Orçamento, Contabilidade e Prestação de Contas (UFOC)","Unidade de Planejamento e Gestão Estratégica (UPGE)"],
+  "Diretoria de Atenção Integral à Saúde (DAIS)": ["Unidade de Saúde Indígena (USI)","Unidade de Atenção Primária à Saúde (UAPS)","Unidade de Atenção Especializada (UAE)","Unidade de Monitoramento e Avaliação (UMA)","Unidade de Projetos e Inovação (UPI)","Unidade de Ensino e Pesquisa (UEP)","Unidade de Transformação Digital em Saúde (UDIGIS)"],
+  "Diretoria de Operações (DIOP)": ["Unidade de Gestão de Pessoas (UGP)","Unidade de Aquisições e Contratos (UAC)","Unidade de Logística, Suprimentos e Patrimônio (ULOG)","Unidade de Infraestrutura (UINFRA)","Unidade de Tecnologia da Informação e Comunicação (UTIC)"],
+};
+
+const EXISTING_ATTRIBUTIONS = [
+  {team:"AUDINT", attrs:["auditorias internas","avaliação independente","controle interno","governança","riscos"]},
+  {team:"PREV",   attrs:["prevenção de irregularidades","disciplina","código de conduta","ética","apuração"]},
+  {team:"UJUR",   attrs:["assessoria jurídica","contratos jurídicos","processos judiciais","legalidade","representação judicial"]},
+  {team:"UCOM",   attrs:["comunicação","imprensa","mídias sociais","identidade visual","divulgação"]},
+  {team:"UFOC",   attrs:["finanças","orçamento","contabilidade","prestação de contas","tributário"]},
+  {team:"UPGE",   attrs:["planejamento estratégico","gestão de riscos","qualidade institucional","monitoramento","indicadores"]},
+  {team:"SEAR",   attrs:["articulação institucional","escritórios regionais","normativos internos","governança interna"]},
+  {team:"UAC",    attrs:["aquisições","compras","contratos","licitação","pregão","fornecedores"]},
+  {team:"UGP",    attrs:["gestão de pessoas","folha de pagamento","recrutamento","seleção","recursos humanos"]},
+  {team:"ULOG",   attrs:["logística","suprimentos","patrimônio","viagens","transporte"]},
+  {team:"UINFRA", attrs:["infraestrutura","obras","manutenção predial","arquitetura","engenharia"]},
+  {team:"UTIC",   attrs:["tecnologia da informação","sistemas de informação","segurança da informação","TIC","dados"]},
+  {team:"USI",    attrs:["saúde indígena","DSEI","SESAI","povos indígenas","interculturalidade"]},
+  {team:"UAPS",   attrs:["atenção primária","APS","provimento médico","emergências sanitárias"]},
+  {team:"UAE",    attrs:["atenção especializada","credenciamento","serviços especializados","qualidade assistencial"]},
+  {team:"UMA",    attrs:["monitoramento e avaliação","indicadores de saúde","inteligência de dados","ciência de dados"]},
+  {team:"UEP",    attrs:["ensino","pesquisa","educação permanente","formação profissional","capacitação"]},
+  {team:"UDIGIS", attrs:["saúde digital","transformação digital","tecnologias em saúde","inovação digital"]},
+  {team:"UPI",    attrs:["inovação","projetos","parcerias","negócios","portfólio de projetos"]},
+];
+
+const STATUSES = [
+  "Em análise pela UFOC","Aprovado pela UFOC",
+  "Em análise pela SEAR","Aprovado pela SEAR",
+  "Aguardando validação da DIREX","Aprovado pela DIREX",
+];
+
+const STATUS_COLORS = {
+  "Em análise pela UFOC":"#f59e0b","Aprovado pela UFOC":"#10b981",
+  "Em análise pela SEAR":"#3b82f6","Aprovado pela SEAR":"#6366f1",
+  "Aguardando validação da DIREX":"#f97316","Aprovado pela DIREX":"#22c55e",
+};
+
+const BUDGET = 30_000_000;
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let proposals = [];
+let currentFilter = "Todos";
+let currentDetailIdx = -1;
+let formLocalizacao = "Sede";
+let formAttrs = [""];
+let formCargos = [{cargo:"",quantidade:1}];
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const fmt = v => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v);
+
+function calcMonthly(cargos){
+  return cargos.reduce((s,c)=>{
+    const d=CARGO_DATA[c.cargo]; if(!d||!c.cargo) return s;
+    const q=Number(c.aprovado??c.quantidade)||0;
+    return s+(d.salario+d.alimentacao+d.bemEstar+d.insalubridade+d.periculosidade)*q;
+  },0);
+}
+
+function calcYearImpact(cargos,reqDate){
+  const now=reqDate?new Date(reqDate):new Date();
+  const end=new Date(now.getFullYear(),11,31);
+  const months=Math.max(1,Math.ceil((end-now)/(1000*60*60*24*30.44)));
+  return calcMonthly(cargos)*months;
+}
+
+function remainingMonths(){
+  const now=new Date(), end=new Date(now.getFullYear(),11,31);
+  return Math.max(1,Math.ceil((end-now)/(1000*60*60*24*30.44)));
+}
+
+function usedBudget(){
+  return proposals.filter(p=>p.status==="Aprovado pela DIREX")
+    .reduce((s,p)=>s+calcYearImpact(p.cargos,p.requestDate),0);
+}
+
+function checkConflicts(attrs){
+  const conflicts=[];
+  attrs.forEach(attr=>{
+    const lo=attr.toLowerCase();
+    EXISTING_ATTRIBUTIONS.forEach(({team,attrs:kws})=>{
+      kws.forEach(kw=>{ if(lo.includes(kw.toLowerCase())) conflicts.push({attr,team,keyword:kw}); });
+    });
+  });
+  return conflicts;
+}
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),3000);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(p){
+  document.querySelectorAll(".page").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(el=>el.classList.remove("active"));
+  document.getElementById("page-"+p).classList.add("active");
+  if(p==="list"){
+    document.getElementById("nav-list").classList.add("active");
+    renderList();
+  } else if(p==="form"){
+    document.getElementById("nav-form").classList.add("active");
+    initForm();
+  }
+}
+
+// ── FORM ──────────────────────────────────────────────────────────────────────
+function initForm(){
+  formLocalizacao="Sede"; formAttrs=[""]; formCargos=[{cargo:"",quantidade:1}];
+  document.getElementById("f-diretoria").value="";
+  document.getElementById("f-unidade").innerHTML='<option value="">Selecione a Unidade</option>';
+  document.getElementById("f-proposito").value="";
+  document.querySelectorAll(".radio-lbl").forEach((el,i)=>el.classList.toggle("active",i===0));
+  document.getElementById("f-year").textContent=new Date().getFullYear();
+  document.getElementById("f-months").textContent=remainingMonths();
+  renderAttrs(); renderCargos(); updateImpact();
+}
+
+function updateUnidades(){
+  const dir=document.getElementById("f-diretoria").value;
+  const sel=document.getElementById("f-unidade");
+  sel.innerHTML='<option value="">Selecione a Unidade</option>';
+  (ORG_STRUCTURE[dir]||[]).forEach(u=>{
+    const o=document.createElement("option"); o.value=o.textContent=u; sel.appendChild(o);
+  });
+}
+
+function setLoc(loc,el){
+  formLocalizacao=loc;
+  document.querySelectorAll(".radio-lbl").forEach(e=>e.classList.remove("active"));
+  el.classList.add("active");
+}
+
+// attrs
+function renderAttrs(){
+  const c=document.getElementById("attrs-container"); c.innerHTML="";
+  formAttrs.forEach((a,i)=>{
+    const row=document.createElement("div"); row.className="attr-row";
+    row.innerHTML=`
+      <span class="attr-idx">${i+1}</span>
+      <textarea class="sm" rows="2" style="flex:1;padding:8px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-size:13px;font-family:'Ubuntu',sans-serif;resize:vertical;outline:none"
+        placeholder="Atribuição ${i+1}..." oninput="updateAttr(${i},this.value)">${a}</textarea>
+      ${formAttrs.length>1?`<button class="btn-delete" style="margin-top:8px" onclick="removeAttr(${i})">✕</button>`:""}
+    `;
+    c.appendChild(row);
+  });
+  updateConflicts();
+}
+
+function addAttr(){ formAttrs.push(""); renderAttrs(); }
+function removeAttr(i){ formAttrs.splice(i,1); renderAttrs(); }
+function updateAttr(i,v){ formAttrs[i]=v; updateConflicts(); }
+
+function updateConflicts(){
+  const filled=formAttrs.filter(Boolean);
+  const conflicts=filled.length?checkConflicts(filled):[];
+  const box=document.getElementById("conflicts-box");
+  if(!conflicts.length){box.style.display="none";return;}
+  box.style.display="block";
+  box.innerHTML=`<div class="conflict-title">⚠️ Atenção: Possíveis sobreposições com atribuições existentes</div>`+
+    conflicts.map(c=>`<div class="conflict-item">
+      <span class="conflict-tag">${c.team}</span>
+      <span class="conflict-text">A atribuição "<em>${c.attr.substring(0,70)}${c.attr.length>70?"...":""}</em>" tem sobreposição com o time <strong>${c.team}</strong> (palavra-chave: "<em>${c.keyword}</em>"). Verifique o Mapa de Atribuições.</span>
+    </div>`).join("");
+}
+
+// cargos
+function renderCargos(){
+  const c=document.getElementById("cargos-container"); c.innerHTML="";
+  formCargos.forEach((cargo,i)=>{
+    const d=CARGO_DATA[cargo.cargo]||{};
+    const qtd=Number(cargo.quantidade)||0;
+    const outros=(d.insalubridade||0)+(d.periculosidade||0);
+    const perPerson=(d.salario||0)+(d.alimentacao||0)+(d.bemEstar||0)+outros;
+    const total=perPerson*qtd;
+    const row=document.createElement("div"); row.className="cargo-row";
+    row.innerHTML=`
+      <div style="flex:3">
+        <select class="sm" style="width:100%" onchange="updateCargoField(${i},'cargo',this.value)">
+          <option value="">Selecione</option>
+          ${Object.keys(CARGO_DATA).map(n=>`<option ${n===cargo.cargo?"selected":""}>${n}</option>`).join("")}
+        </select>
+      </div>
+      <div style="flex:1">
+        <input type="number" class="sm" min="1" value="${cargo.quantidade}" style="width:100%" oninput="updateCargoField(${i},'quantidade',this.value)">
+      </div>
+      <div style="flex:2" class="cargo-val">${d.salario?fmt(d.salario):"—"}</div>
+      <div style="flex:2" class="cargo-val">${d.alimentacao?fmt(d.alimentacao):"—"}</div>
+      <div style="flex:2" class="cargo-val">${d.bemEstar?fmt(d.bemEstar):"—"}</div>
+      <div style="flex:2" class="cargo-val">${outros?fmt(outros):"—"}</div>
+      <div style="flex:2" class="cargo-val" style="color:var(--green);font-weight:700">${cargo.cargo&&qtd?fmt(total):"—"}</div>
+      <div style="width:32px">${formCargos.length>1?`<button class="btn-delete" onclick="removeCargo(${i})">✕</button>`:""}</div>
+    `;
+    c.appendChild(row);
+  });
+  updateImpact();
+}
+
+function addCargo(){ formCargos.push({cargo:"",quantidade:1}); renderCargos(); }
+function removeCargo(i){ formCargos.splice(i,1); renderCargos(); }
+function updateCargoField(i,f,v){ formCargos[i][f]=f==="quantidade"?Number(v)||1:v; renderCargos(); }
+
+function updateImpact(){
+  const m=calcMonthly(formCargos.map(c=>({...c,aprovado:c.quantidade})));
+  const rm=remainingMonths();
+  document.getElementById("f-monthly").textContent=fmt(m);
+  document.getElementById("f-months").textContent=rm;
+  document.getElementById("f-year-impact").textContent=fmt(m*rm);
+}
+
+function submitForm(){
+  const dir=document.getElementById("f-diretoria").value;
+  const und=document.getElementById("f-unidade").value;
+  const prop=document.getElementById("f-proposito").value.trim();
+  if(!dir||!und||!prop){showToast("⚠️ Preencha os campos obrigatórios!"); return;}
+  const filled=formAttrs.filter(Boolean);
+  const conflicts=filled.length?checkConflicts(filled):[];
+  proposals.push({
+    id:Date.now(), diretoria:dir, unidade:und, proposito:prop,
+    atribuicoes:filled, cargos:formCargos.filter(c=>c.cargo).map(c=>({...c,aprovado:c.quantidade})),
+    localizacao:formLocalizacao, status:"Em análise pela UFOC",
+    requestDate:new Date().toISOString(), conflicts,
+    approvals:{UFOC:false,NEISS:false,UTIC:false,SEAR:false},
+    comments:[],
+  });
+  showToast("✓ Proposta enviada com sucesso!");
+  showPage("list");
+}
+
+// ── LIST ──────────────────────────────────────────────────────────────────────
+function setFilter(f, el){
+  currentFilter=f;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+  el.classList.add("active");
+  renderList();
+}
+
+function renderList(){
+  const search=(document.getElementById("search-input").value||"").toLowerCase();
+  const ub=usedBudget();
+  const avail=BUDGET-ub;
+  const pct=Math.min(100,(ub/BUDGET)*100);
+  document.getElementById("budget-fill").style.width=pct+"%";
+  document.getElementById("budget-used").textContent="Comprometido: "+fmt(ub);
+  document.getElementById("budget-available").textContent=fmt(avail)+" disponível";
+  document.getElementById("list-count").textContent=proposals.length+" proposta(s) registrada(s)";
+
+  const filtered=proposals.filter(p=>{
+    const ms=currentFilter==="Todos"||p.status===currentFilter;
+    const mq=!search||p.unidade.toLowerCase().includes(search)||p.diretoria.toLowerCase().includes(search);
+    return ms&&mq;
+  });
+
+  const el=document.getElementById("proposals-list");
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty-state"><div class="emoji">📋</div><div>Nenhuma proposta encontrada</div></div>`;
+    return;
+  }
+
+  el.innerHTML=filtered.map((p,fi)=>{
+    const idx=proposals.indexOf(p);
+    const m=calcMonthly(p.cargos);
+    const color=STATUS_COLORS[p.status]||"#6b7280";
+    const approvalBadges=Object.entries(p.approvals||{}).map(([u,ok])=>
+      `<span class="approval-badge" style="background:${ok?"rgba(34,197,94,.2)":"rgba(107,114,128,.2)"};color:${ok?"var(--green)":"var(--dim)"}">${u}</span>`
+    ).join("");
+    const cflCount=(p.conflicts||[]).length;
+    return `
+      <div class="proposal-card" onclick="openDetail(${idx})">
+        <div class="proposal-card-top">
+          <div class="proposal-card-left">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span class="status-dot" style="background:${color}"></span>
+              <span class="proposal-title">${p.unidade}</span>
+            </div>
+            <span class="proposal-meta">${p.diretoria} · ${p.localizacao}</span>
+          </div>
+          <div class="proposal-card-right">
+            <div class="proposal-cost">${fmt(m)}<span>/mês</span></div>
+            <span class="status-badge" style="background:${color}">${p.status}</span>
+          </div>
+        </div>
+        <div class="proposal-card-footer">
+          <span>👥 ${p.cargos.length} cargo(s)</span>
+          <span>📍 ${p.localizacao}</span>
+          ${cflCount?`<span style="color:var(--amber)">⚠️ ${cflCount} sobreposição(ões)</span>`:""}
+          <span>🗓️ ${new Date(p.requestDate).toLocaleDateString("pt-BR")}</span>
+          <div style="display:flex;gap:4px">${approvalBadges}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ── DETAIL ────────────────────────────────────────────────────────────────────
+function openDetail(idx){
+  currentDetailIdx=idx;
+  renderDetail();
+  showPage("detail");
+}
+
+function renderDetail(){
+  const p=proposals[currentDetailIdx];
+  if(!p) return;
+
+  document.getElementById("d-title").textContent=p.unidade;
+  document.getElementById("d-subtitle").textContent=p.diretoria+" · "+p.localizacao;
+  document.getElementById("d-proposito").textContent=p.proposito;
+
+  // attrs
+  const attrSec=document.getElementById("d-attrs-section");
+  if(p.atribuicoes&&p.atribuicoes.length){
+    attrSec.style.display="block";
+    document.getElementById("d-attrs").innerHTML=p.atribuicoes.map(a=>`<li>${a}</li>`).join("");
+  } else attrSec.style.display="none";
+
+  // status chips
+  const chips=document.getElementById("d-status-chips");
+  chips.innerHTML=STATUSES.map(s=>`
+    <button class="status-chip ${p.status===s?"active":""}" style="${p.status===s?"background:"+STATUS_COLORS[s]+";border-color:transparent;color:#fff":""}"
+      onclick="setDetailStatus('${s}',this)">${s}</button>
+  `).join("");
+
+  // email box
+  document.getElementById("d-email-box").style.display=p.status==="Aprovado pela DIREX"?"block":"none";
+
+  // approvals
+  const approvalEl=document.getElementById("d-approvals");
+  approvalEl.innerHTML=["UFOC","NEISS","UTIC","SEAR"].map(unit=>
+    `<div class="approval-item ${p.approvals[unit]?"approved":""}" id="ap-${unit}">
+      <div class="approval-name">${unit}</div>
+      <div class="approval-toggle" style="background:${p.approvals[unit]?"var(--green)":"#374151"}"
+        onclick="toggleApproval('${unit}')">${p.approvals[unit]?"✓ Aprovado":"Pendente"}</div>
+    </div>`
+  ).join("");
+
+  // conflicts
+  const cflEl=document.getElementById("d-conflicts");
+  if(p.conflicts&&p.conflicts.length){
+    cflEl.style.display="block";
+    cflEl.innerHTML=`<div class="conflict-box">
+      <div class="conflict-title">⚠️ ${p.conflicts.length} sobreposição(ões) identificada(s) no Mapa de Atribuições</div>
+      ${p.conflicts.map(c=>`<div class="conflict-item">
+        <span class="conflict-tag">${c.team}</span>
+        <span class="conflict-text">${c.attr} → detectado em <strong>${c.team}</strong></span>
+      </div>`).join("")}
+    </div>`;
+  } else cflEl.style.display="none";
+
+  // cargos
+  renderDetailCargos();
+
+  // comments
+  renderComments();
+}
+
+function renderDetailCargos(){
+  const p=proposals[currentDetailIdx];
+  const el=document.getElementById("d-cargos");
+  el.innerHTML=p.cargos.map((c,i)=>{
+    const d=CARGO_DATA[c.cargo]||{};
+    const ap=Number(c.aprovado??c.quantidade)||0;
+    const monthly=((d.salario||0)+(d.alimentacao||0)+(d.bemEstar||0))*ap;
+    return `<div class="cargo-detail-row">
+      <div style="flex:3;font-size:13px;color:var(--text)">${c.cargo}</div>
+      <div style="flex:1;text-align:center;color:var(--muted)">${c.quantidade}</div>
+      <div style="flex:1">
+        <input type="number" class="sm" min="0" max="${c.quantidade}" value="${ap}" style="width:60px"
+          oninput="updateDetailCargoAprovado(${i},this.value)">
+      </div>
+      <div style="flex:2;text-align:right;font-size:13px;color:var(--green);font-weight:700">${fmt(monthly)}</div>
+    </div>`;
+  }).join("");
+
+  // update impact
+  const m=calcMonthly(p.cargos);
+  const yi=calcYearImpact(p.cargos,p.requestDate);
+  const ub=usedBudget();
+  const balance=BUDGET-ub;
+  document.getElementById("d-monthly").textContent=fmt(m);
+  document.getElementById("d-year-impact").textContent=fmt(yi);
+  const balEl=document.getElementById("d-budget-balance");
+  balEl.textContent=fmt(balance);
+  balEl.className="impact-value "+(balance<0?"red":"green");
+}
+
+function updateDetailCargoAprovado(i,v){
+  proposals[currentDetailIdx].cargos[i].aprovado=Math.min(proposals[currentDetailIdx].cargos[i].quantidade,Number(v)||0);
+  renderDetailCargos();
+}
+
+function setDetailStatus(s,el){
+  proposals[currentDetailIdx].status=s;
+  document.querySelectorAll(".status-chip").forEach(c=>{
+    c.classList.remove("active");
+    c.style.background=""; c.style.borderColor=""; c.style.color="";
+  });
+  el.classList.add("active");
+  el.style.background=STATUS_COLORS[s]; el.style.borderColor="transparent"; el.style.color="#fff";
+  document.getElementById("d-email-box").style.display=s==="Aprovado pela DIREX"?"block":"none";
+  if(s==="Aprovado pela DIREX") updateBudget();
+}
+
+function updateBudget(){ renderList(); }
+
+function toggleApproval(unit){
+  const p=proposals[currentDetailIdx];
+  p.approvals[unit]=!p.approvals[unit];
+  const item=document.getElementById("ap-"+unit);
+  item.classList.toggle("approved",p.approvals[unit]);
+  item.querySelector(".approval-toggle").style.background=p.approvals[unit]?"var(--green)":"#374151";
+  item.querySelector(".approval-toggle").textContent=p.approvals[unit]?"✓ Aprovado":"Pendente";
+}
+
+function renderComments(){
+  const p=proposals[currentDetailIdx];
+  const el=document.getElementById("d-comments");
+  el.innerHTML=(p.comments||[]).map(c=>`
+    <div class="comment-item">
+      <div class="comment-meta">${c.author} · ${c.date}</div>
+      <div class="comment-text">${c.text}</div>
+    </div>
+  `).join("");
+}
+
+function addComment(){
+  const inp=document.getElementById("d-comment-input");
+  if(!inp.value.trim()) return;
+  proposals[currentDetailIdx].comments.push({
+    text:inp.value.trim(),
+    date:new Date().toLocaleString("pt-BR"),
+    author:"Usuário"
+  });
+  inp.value="";
+  renderComments();
+}
+
+function saveDetail(){
+  showToast("✓ Alterações salvas com sucesso!");
+  renderList();
+}
+
+function sendEmail(){
+  showToast("📧 Notificação enviada para todas as equipes!");
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("f-year").textContent=new Date().getFullYear();
+  document.getElementById("f-months").textContent=remainingMonths();
+  initForm();
+  renderList();
+
+  // hover on proposal cards
+  document.addEventListener("mouseover",e=>{
+    const card=e.target.closest(".proposal-card");
+    if(card){ card.style.borderColor="rgba(99,102,241,.3)"; card.style.background="rgba(99,102,241,.04)"; }
+  });
+  document.addEventListener("mouseout",e=>{
+    const card=e.target.closest(".proposal-card");
+    if(card){ card.style.borderColor="rgba(255,255,255,.07)"; card.style.background="rgba(255,255,255,.03)"; }
+  });
+});
+</script>
 </body>
 </html>
