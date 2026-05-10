@@ -102,10 +102,8 @@ main { max-width: 1020px; margin: 0 auto; padding: 36px 24px 60px; position: rel
 /* ── PAGE HEADER ── */
 .page-header { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 30px; }
 .page-header-icon {
-  width: 52px; height: 52px; border-radius: 14px; display: flex;
-  align-items: center; justify-content: center; font-size: 26px;
-  background: linear-gradient(135deg, var(--accent-lt), var(--teal-lt));
-  border: 1.5px solid var(--border); flex-shrink: 0;
+  width: 6px; height: 52px; border-radius: 4px; flex-shrink: 0;
+  background: linear-gradient(180deg, #2563eb, #0d9488);
 }
 .page-title  { font-size: 24px; font-weight: 700; color: var(--text); line-height: 1.2; }
 .page-subtitle { color: var(--muted); font-size: 15px; margin-top: 5px; }
@@ -144,7 +142,6 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
 }
 .type-card:hover { border-color: var(--accent); background: var(--accent-lt); }
 .type-card.active { border-color: var(--accent); background: var(--accent-lt); }
-.type-card .type-icon { font-size: 24px; margin-bottom: 8px; }
 .type-card .type-name { font-weight: 700; font-size: 15px; color: var(--text); }
 .type-card .type-desc { font-size: 13px; color: var(--muted); margin-top: 3px; }
 
@@ -299,8 +296,6 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 7px; }
 .proposal-title { font-weight: 700; font-size: 16px; color: var(--text); }
 .proposal-meta { color: var(--muted); font-size: 13px; margin-top: 3px; }
-.proposal-cost { font-weight: 700; font-size: 18px; color: var(--text); margin-bottom: 5px; }
-.proposal-cost span { font-size: 13px; color: var(--muted); font-weight: 400; }
 .status-badge {
   display: inline-block; padding: 3px 10px; border-radius: 6px;
   font-size: 11px; font-weight: 700; letter-spacing: .3px;
@@ -417,7 +412,7 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
     <span class="nav-title">Sistema de Propostas de Vagas</span>
   </div>
   <div class="nav-actions">
-    <button class="nav-btn active" id="nav-list" onclick="showPage('list')">📊 Propostas</button>
+    <button class="nav-btn active" id="nav-list" onclick="showPage('list')">Propostas</button>
     <button class="nav-btn" id="nav-form" onclick="startNewForm()">+ Nova Proposta</button>
   </div>
 </nav>
@@ -429,7 +424,7 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
 ══════════════════════════════════════════════════════ -->
 <div class="page active" id="page-list">
   <div class="page-header">
-    <div class="page-header-icon">📊</div>
+    <div class="page-header-icon" id="list-header-icon"></div>
     <div style="flex:1">
       <div class="page-title">Propostas de Coordenação e Vagas</div>
       <div class="page-subtitle" id="list-count">0 proposta(s) registrada(s)</div>
@@ -452,14 +447,14 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
 
   <!-- Filters -->
   <div class="filter-row">
-    <input type="text" class="search-input" placeholder="🔍 Buscar proposta..." oninput="renderList()" id="search-input">
+    <input type="text" class="search-input" placeholder="Buscar proposta..." oninput="renderList()" id="search-input">
     <button class="chip active" onclick="setFilter('Todos',this)">Todos</button>
     <button class="chip" onclick="setFilter('Em análise pela UFOC',this)">UFOC</button>
-    <button class="chip" onclick="setFilter('Aprovado pela UFOC',this)">✓ UFOC</button>
+    <button class="chip" onclick="setFilter('Aprovado pela UFOC',this)">Aprovado UFOC</button>
     <button class="chip" onclick="setFilter('Em análise pela SEAR',this)">SEAR</button>
-    <button class="chip" onclick="setFilter('Aprovado pela SEAR',this)">✓ SEAR</button>
+    <button class="chip" onclick="setFilter('Aprovado pela SEAR',this)">Aprovado SEAR</button>
     <button class="chip" onclick="setFilter('Aguardando validação da DIREX',this)">Ag. DIREX</button>
-    <button class="chip" onclick="setFilter('Aprovado pela DIREX',this)">✓ DIREX</button>
+    <button class="chip" onclick="setFilter('Aprovado pela DIREX',this)">Aprovado DIREX</button>
   </div>
 
   <div id="proposals-list"></div>
@@ -470,7 +465,7 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
 ══════════════════════════════════════════════════════ -->
 <div class="page" id="page-form">
   <div class="page-header">
-    <div class="page-header-icon" id="form-icon">📋</div>
+    <div class="page-header-icon" id="form-icon"></div>
     <div>
       <div class="page-title" id="form-page-title">Nova Proposta</div>
       <div class="page-subtitle" id="form-page-sub">Preencha os dados abaixo</div>
@@ -482,12 +477,10 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
     <div class="section-title"><span class="section-dot"></span>Tipo de Solicitação</div>
     <div class="type-selector" id="type-selector">
       <div class="type-card active" id="tc-estrutura" onclick="selectType('estrutura')">
-        <div class="type-icon">🏛️</div>
         <div class="type-name">Nova Estrutura Organizacional</div>
         <div class="type-desc">Criação de coordenação, núcleo ou unidade</div>
       </div>
       <div class="type-card" id="tc-pessoal" onclick="selectType('pessoal')">
-        <div class="type-icon">👤</div>
         <div class="type-name">Adição de Pessoal</div>
         <div class="type-desc">Novas vagas em coordenação existente</div>
       </div>
@@ -497,9 +490,9 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
     <div id="subtipo-estrutura">
       <label class="lbl">Tipo de Estrutura *</label>
       <div class="radio-group">
-        <label class="radio-lbl active" onclick="setSubtipo('Coordenação',this)">🗂️ Coordenação</label>
-        <label class="radio-lbl" onclick="setSubtipo('Núcleo',this)">🔬 Núcleo</label>
-        <label class="radio-lbl" onclick="setSubtipo('Unidade',this)">🏢 Unidade</label>
+        <label class="radio-lbl active" onclick="setSubtipo('Coordenação',this)">Coordenação</label>
+        <label class="radio-lbl" onclick="setSubtipo('Núcleo',this)">Núcleo</label>
+        <label class="radio-lbl" onclick="setSubtipo('Unidade',this)">Unidade</label>
       </div>
     </div>
     <!-- Subtipo pessoal: coordenação existente -->
@@ -507,7 +500,9 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
       <div class="grid-2">
         <div class="field">
           <label class="lbl">Coordenação de destino das vagas *</label>
-          <input type="text" id="f-coord-existente" placeholder="Ex: Coordenação de Gestão de Riscos (CGR)">
+          <select id="f-coord-existente">
+            <option value="">Selecione a coordenação</option>
+          </select>
         </div>
         <div class="field">
           <label class="lbl">Justificativa da necessidade *</label>
@@ -532,7 +527,7 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
       </div>
       <div class="field">
         <label class="lbl">Unidade *</label>
-        <select id="f-unidade">
+        <select id="f-unidade" onchange="updateCoordSelect()">
           <option value="">Selecione a Unidade</option>
         </select>
       </div>
@@ -540,10 +535,10 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
     <div class="field">
       <label class="lbl">Localização *</label>
       <div class="radio-group" id="radio-loc">
-        <label class="radio-lbl active" onclick="setLoc('Sede',this)">🏢 Sede</label>
-        <label class="radio-lbl" onclick="setLoc('Cowork 1',this)">🏛️ Cowork 1</label>
-        <label class="radio-lbl" onclick="setLoc('Cowork 2',this)">🏛️ Cowork 2</label>
-        <label class="radio-lbl" onclick="setLoc('Home Office',this)">🏠 Home Office</label>
+        <label class="radio-lbl active" onclick="setLoc('Sede',this)">Sede</label>
+        <label class="radio-lbl" onclick="setLoc('Cowork 1',this)">Cowork 1</label>
+        <label class="radio-lbl" onclick="setLoc('Cowork 2',this)">Cowork 2</label>
+        <label class="radio-lbl" onclick="setLoc('Home Office',this)">Home Office</label>
       </div>
     </div>
   </div>
@@ -620,13 +615,13 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
     <button class="btn-outline" onclick="showPage('list')">← Voltar</button>
     <div style="display:flex;gap:10px">
-      <button class="btn-edit" id="d-edit-btn" onclick="editProposal()">✏️ Editar Proposta</button>
+      <button class="btn-edit" id="d-edit-btn" onclick="editProposal()">Editar Proposta</button>
       <button class="btn-primary" onclick="saveDetail()">Salvar Alterações</button>
     </div>
   </div>
 
   <div class="page-header">
-    <div class="page-header-icon" id="d-icon">🗂️</div>
+    <div class="page-header-icon" id="d-icon"></div>
     <div>
       <div class="page-title" id="d-title">—</div>
       <div class="page-subtitle" id="d-subtitle">—</div>
@@ -635,7 +630,7 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
 
   <!-- Lock notice -->
   <div class="lock-notice" id="d-lock-notice" style="display:none">
-    🔒 Esta proposta está em análise e não pode mais ser editada pelo solicitante.
+    Esta proposta está em análise e não pode mais ser editada pelo solicitante.
   </div>
 
   <!-- Tabs -->
@@ -652,7 +647,7 @@ input.sm, select.sm { padding: 7px 10px; font-size: 14px; }
       <div class="section-title"><span class="section-dot"></span>Status da Proposta</div>
       <div class="detail-status-chips" id="d-status-chips"></div>
       <div id="d-email-box" class="email-box" style="display:none">
-        <div class="email-title">📧 Notificar equipes sobre aprovação da DIREX</div>
+        <div class="email-title">Notificar equipes sobre aprovação da DIREX</div>
         <div class="email-tags">
           <span class="email-tag">coadi@teste.com.br</span>
           <span class="email-tag">ufoc@teste</span>
@@ -794,6 +789,28 @@ const CARGO_DATA = {
   "SANITARISTA":                 {salario:7060, alimentacao:800, bemEstar:0,   insalubridade:324,periculosidade:0},
 };
 
+const COORDINATIONS = {
+  "Gabinete da Presidência (GAB)": ["Coordenação Especial de Gestão Documental (CGDOC)","Coordenação Especial de Eventos e Participação Institucional (COEPI)"],
+  "Secretaria Executiva e de Articulação (SEAR)": ["Coordenação de Articulação e Desenvolvimento Institucional (COADI)","Coordenação dos Escritórios (COES)"],
+  "Unidade de Integridade (UINT)": ["Coordenação de Auditoria Interna (AUDINT)","Coordenação de Prevenção e Disciplina (PREV)"],
+  "Unidade Jurídica (UJUR)": ["Coordenação Jurídica Consultivo (CJC)","Coordenação Jurídica Contencioso Cível (CJCC)","Coordenação Jurídica Contencioso Trabalhista (CJCT)"],
+  "Unidade de Comunicação (UCOM)": ["Coordenação de Comunicação Interna (COINT)","Coordenação de Comunicação Externa (COEXT)"],
+  "Unidade de Finanças, Orçamento, Contabilidade e Prestação de Contas (UFOC)": ["Coordenação de Contabilidade (CCONTAB)","Coordenação de Prestação de Contas (CPC)","Coordenação de Finanças (COFIN)","Coordenação de Orçamento (CORC)","Coordenação de Conformidade Fiscal e Tributária (COFIT)"],
+  "Unidade de Planejamento e Gestão Estratégica (UPGE)": ["Coordenação de Gestão de Riscos (CGR)","Coordenação de Planejamento Institucional (COP)","Coordenação de Qualidade Institucional (CQI)"],
+  "Unidade de Saúde Indígena (USI)": ["Coordenação da Atenção Especializada na Saúde Indígena (CAESI)","Coordenação de Articulação e Apoio Administrativo da Saúde Indígena (CAASI)","Coordenação de Apoio à Gestão da Saúde Indígena (COAGSI)","Coordenação de Apoio ao Controle Social e à Participação Social Indígena (COACSI)","Coordenação de Formação e Interculturalidade (CFI)","Coordenação de Gestão do Trabalho na Saúde Indígena (CGTSI)"],
+  "Unidade de Atenção Primária à Saúde (UAPS)": ["Coordenação de Apoio à Gestão (COAG)","Coordenação de Gestão da Qualidade Assistencial (CGQA)","Coordenação de Modelagem e Gestão de Serviços (CMGS)","Coordenação de Serviços de Provimento Profissional (CSPRO)"],
+  "Unidade de Atenção Especializada (UAE)": ["Coordenação de Requisitos Técnicos Assistenciais (CRTA)","Coordenação de Provimento de Serviços Especializados (CIPE)","Coordenação de Gestão do Cuidado (COGEC)","Coordenação de Qualidade e Segurança do Paciente (CQSP)"],
+  "Unidade de Monitoramento e Avaliação (UMA)": ["Coordenação de Monitoramento e Avaliação da Gestão (CMAG)","Coordenação de Monitoramento e Avaliação Estratégica (CMAE)"],
+  "Unidade de Projetos e Inovação (UPI)": ["Escritório de Gerenciamento de Projetos (EGP)","Coordenação de Gestão da Inovação (CGI)","Coordenação de Negócios e Parcerias (CNP)"],
+  "Unidade de Ensino e Pesquisa (UEP)": ["Coordenação de Acompanhamento Pedagógico (CAPED)","Coordenação de Aperfeiçoamento Profissional (CAP)","Coordenação de Pesquisa (COPES)"],
+  "Unidade de Transformação Digital em Saúde (UDIGIS)": ["Coordenação de Soluções Estratégicas em Saúde Digital (CSESD)","Coordenação do Núcleo de Saúde Digital (CNSD)","Coordenação de Tecnologias Aplicadas à Atenção Especializada (CTAE)"],
+  "Unidade de Gestão de Pessoas (UGP)": ["Coordenação de Administração de Pessoal (COAPE)","Coordenação de Desenvolvimento Humano e Organizacional (CDHO)","Coordenação de Gestão da Informação de Pessoal (COGIP)","Coordenação de Gestão de Pessoal da Saúde Indígena (COGPSI)","Coordenação de Recrutamento e Seleção (CORES)","Coordenação de Atendimento e Frequência (COAT)","Coordenação de Saúde e Segurança Ocupacional (CSSO)"],
+  "Unidade de Aquisições e Contratos (UAC)": ["Coordenação de Aquisições e Serviços Singulares (CASS)","Coordenação de Contratações de Serviços (CCS)","Coordenação de Gestão Contratual (CGC)","Coordenação de Preços e Aquisições (CPA)","Coordenação de Preços e Aquisições Simplificadas (CPAS)"],
+  "Unidade de Logística, Suprimentos e Patrimônio (ULOG)": ["Coordenação de Apoio Administrativo (CAAD)","Coordenação de Suprimentos, Patrimônio e Logística (CISLOG)","Coordenação de Viagens Institucionais (CVI)"],
+  "Unidade de Infraestrutura (UINFRA)": ["Coordenação de Infraestrutura e Ambiência Institucional (CIAMI)"],
+  "Unidade de Tecnologia da Informação e Comunicação (UTIC)": ["Coordenação de Sistemas de Informação (CSI)","Coordenação de Projetos e Governança de TIC (CPGTIC)","Coordenação de Infraestrutura e Segurança (CISTIC)","Coordenação de Segurança de Dados (CSD)"],
+};
+
 const ORG_STRUCTURE = {
   "Presidência (PRES)":["Gabinete da Presidência (GAB)","Secretaria Executiva e de Articulação (SEAR)","Unidade de Integridade (UINT)","Unidade Jurídica (UJUR)","Unidade de Comunicação (UCOM)","Unidade de Finanças, Orçamento, Contabilidade e Prestação de Contas (UFOC)","Unidade de Planejamento e Gestão Estratégica (UPGE)"],
   "Diretoria de Atenção Integral à Saúde (DAIS)":["Unidade de Saúde Indígena (USI)","Unidade de Atenção Primária à Saúde (UAPS)","Unidade de Atenção Especializada (UAE)","Unidade de Monitoramento e Avaliação (UMA)","Unidade de Projetos e Inovação (UPI)","Unidade de Ensino e Pesquisa (UEP)","Unidade de Transformação Digital em Saúde (UDIGIS)"],
@@ -933,7 +950,7 @@ function checkPurposeConflicts(){
   if(!hits.length){box.style.display="none";return;}
   box.style.display="block";
   box.innerHTML=`<div class="purpose-conflict-box">
-    <div class="purpose-conflict-title">🔍 Possível sobreposição de propósito com estruturas existentes</div>
+    <div class="purpose-conflict-title">Possível sobreposição de propósito com estruturas existentes</div>
     ${hits.map(h=>`<div class="conflict-item">
       <span class="conflict-tag" style="background:#fdf4ff;color:#6b21a8;border-color:#d8b4fe">${h.team}</span>
       <span class="conflict-text" style="color:#4c1d95">O propósito tem similaridade com <strong>${h.team}</strong> — palavras comuns: <em>${h.matches.slice(0,5).join(", ")}</em></span>
@@ -961,7 +978,7 @@ function showPage(p){
 function startNewForm(){
   editingIdx=-1; formType="estrutura"; formSubtipo="Coordenação";
   formLocalizacao="Sede"; formAttrs=[""]; formCargos=[{cargo:"",quantidade:1}];
-  document.getElementById("form-icon").textContent="📋";
+  document.getElementById("form-icon").textContent="";
   document.getElementById("form-page-title").textContent="Nova Proposta";
   document.getElementById("form-page-sub").textContent="Preencha os dados abaixo";
   resetFormFields();
@@ -976,10 +993,15 @@ function editProposal(){
   formLocalizacao=p.localizacao||"Sede";
   formAttrs=p.atribuicoes&&p.atribuicoes.length?[...p.atribuicoes]:[""];
   formCargos=p.cargos.map(c=>({...c}));
-  document.getElementById("form-icon").textContent="✏️";
+  document.getElementById("form-icon").textContent="";
   document.getElementById("form-page-title").textContent="Editar Proposta";
   document.getElementById("form-page-sub").textContent=p.unidade||p.nomeEstrutura||"";
   resetFormFields(p);
+  // populate coord select for pessoal after fields reset
+  if(p.tipo==="pessoal"){
+    updateCoordSelect();
+    document.getElementById("f-coord-existente").value=p.coordExistente||"";
+  }
   showPage("form");
 }
 
@@ -1043,6 +1065,16 @@ function updateUnidades(){
   (ORG_STRUCTURE[dir]||[]).forEach(u=>{
     const o=document.createElement("option"); o.value=o.textContent=u; sel.appendChild(o);
   });
+  updateCoordSelect();
+}
+
+function updateCoordSelect(){
+  const unidade=document.getElementById("f-unidade").value;
+  const sel=document.getElementById("f-coord-existente");
+  sel.innerHTML='<option value="">Selecione a coordenação</option>';
+  (COORDINATIONS[unidade]||[]).forEach(c=>{
+    const o=document.createElement("option"); o.value=o.textContent=c; sel.appendChild(o);
+  });
 }
 
 // Attrs
@@ -1069,7 +1101,7 @@ function updateConflicts(){
   const box=document.getElementById("conflicts-box");
   if(!cs.length){box.style.display="none";return;}
   box.style.display="block";
-  box.innerHTML=`<div class="conflict-title">⚠️ Atenção: Possíveis sobreposições com atribuições existentes</div>`+
+  box.innerHTML=`<div class="conflict-title">Atenção: Possíveis sobreposições com atribuições existentes</div>`+
     cs.map(c=>`<div class="conflict-item"><span class="conflict-tag">${c.team}</span>
       <span class="conflict-text">A atribuição "<em>${c.attr.substring(0,70)}${c.attr.length>70?"...":""}</em>" tem sobreposição com <strong>${c.team}</strong> (palavra-chave: "<em>${c.keyword}</em>").</span></div>`).join("");
 }
@@ -1194,18 +1226,17 @@ function renderList(){
 
   const el=document.getElementById("proposals-list");
   if(!filtered.length){
-    el.innerHTML=`<div class="empty-state"><div class="emoji">📋</div><div>Nenhuma proposta encontrada</div></div>`;
+    el.innerHTML=`<div class="empty-state"><div style="font-size:44px;margin-bottom:14px">—</div><div>Nenhuma proposta encontrada</div></div>`;
     return;
   }
 
   el.innerHTML=filtered.map(p=>{
     const idx=proposals.indexOf(p);
-    const m=calcMonthly(p.cargos);
     const sc=STATUS_COLORS[p.status]||{bg:"#f1f5f9",color:"#475569",dot:"#94a3b8"};
-    const typLabel=p.tipo==="pessoal"?"Adição de Pessoal":`Nova ${p.subtipo||"Coordenação"}`;
+    const typLabel=p.tipo==="pessoal"?"Adição de Pessoal":"Nova "+(p.subtipo||"Coordenação");
     const typCls=p.tipo==="pessoal"?"pessoal":"";
     const approvalBadges=Object.entries(p.approvals||{}).map(([u,ok])=>
-      `<span class="approval-badge" style="background:${ok?"var(--green-lt)":"var(--bg2)"};color:${ok?"var(--green)":"var(--dim)"};">${ok?"✓ ":""}${u}</span>`
+      `<span class="approval-badge" style="background:${ok?"var(--green-lt)":"var(--bg2)"};color:${ok?"var(--green)":"var(--dim)"};">${ok?"Aprovado ":""}${u}</span>`
     ).join("");
     const cfl=(p.conflicts||[]).length+(p.purpConflicts||[]).length;
     const editable=isEditable(p);
@@ -1218,19 +1249,18 @@ function renderList(){
             <span class="proposal-title">${p.nomeEstrutura||p.unidade}</span>
           </div>
           <span class="proposal-meta">${p.diretoria} · ${p.unidade} · ${p.localizacao}</span>
-          ${p.tipo==="pessoal"&&p.coordExistente?`<div style="font-size:12px;color:var(--muted);margin-top:3px">→ ${p.coordExistente}</div>`:""}
+          ${p.tipo==="pessoal"&&p.coordExistente?`<div style="font-size:12px;color:var(--muted);margin-top:3px">Destino: ${p.coordExistente}</div>`:""}
         </div>
         <div class="proposal-card-right">
-          <div class="proposal-cost">${fmt(m)}<span>/mês</span></div>
           <span class="status-badge" style="background:${sc.bg};color:${sc.color}">${p.status}</span>
         </div>
       </div>
       <div class="proposal-card-footer">
-        <span>👥 ${p.cargos.length} cargo(s)</span>
-        <span>📍 ${p.localizacao}</span>
-        ${cfl?`<span style="color:var(--amber)">⚠️ ${cfl} sobreposição(ões)</span>`:""}
-        ${editable?`<span style="color:var(--green)">✏️ Editável</span>`:`<span style="color:var(--muted)">🔒 Em análise</span>`}
-        <span>🗓️ ${new Date(p.requestDate).toLocaleDateString("pt-BR")}</span>
+        <span>${p.cargos.length} cargo(s)</span>
+        <span>${p.localizacao}</span>
+        ${cfl?`<span style="color:var(--amber)">${cfl} sobreposição(ões)</span>`:""}
+        ${editable?`<span style="color:var(--green)">Editável</span>`:`<span style="color:var(--muted)">Em análise</span>`}
+        <span>${new Date(p.requestDate).toLocaleDateString("pt-BR")}</span>
         <div style="display:flex;gap:5px">${approvalBadges}</div>
       </div>
     </div>`;
@@ -1266,7 +1296,7 @@ function renderDetail(){
 
   document.getElementById("d-title").textContent=p.nomeEstrutura||p.unidade;
   document.getElementById("d-subtitle").textContent=`${p.diretoria} · ${p.localizacao} · ${p.tipo==="pessoal"?"Adição de Pessoal":"Nova "+p.subtipo}`;
-  document.getElementById("d-icon").textContent=p.tipo==="pessoal"?"👤":"🏛️";
+  document.getElementById("d-icon").textContent="";
 
   // Edit button visibility
   const editBtn=document.getElementById("d-edit-btn");
@@ -1291,7 +1321,7 @@ function renderDetail(){
     `<div class="approval-item ${p.approvals[u]?"approved":""}" id="ap-${u}">
       <div class="approval-name">${u}</div>
       <div class="approval-toggle" style="background:${p.approvals[u]?"var(--green)":"#94a3b8"}"
-        onclick="toggleApproval('${u}')">${p.approvals[u]?"✓ Aprovado":"Pendente"}</div>
+        onclick="toggleApproval('${u}')">${p.approvals[u]?"Aprovado":"Pendente"}</div>
     </div>`
   ).join("");
 
@@ -1300,7 +1330,7 @@ function renderDetail(){
   if(p.conflicts&&p.conflicts.length){
     cflEl.style.display="block";
     cflEl.innerHTML=`<div class="conflict-box">
-      <div class="conflict-title">⚠️ ${p.conflicts.length} sobreposição(ões) de atribuição identificada(s)</div>
+      <div class="conflict-title">${p.conflicts.length} sobreposição(ões) de atribuição identificada(s)</div>
       ${p.conflicts.map(c=>`<div class="conflict-item"><span class="conflict-tag">${c.team}</span>
         <span class="conflict-text">${c.attr} → sobreposição com <strong>${c.team}</strong></span></div>`).join("")}
     </div>`;
@@ -1311,7 +1341,7 @@ function renderDetail(){
   if(p.purpConflicts&&p.purpConflicts.length){
     pcEl.style.display="block";
     pcEl.innerHTML=`<div class="purpose-conflict-box">
-      <div class="purpose-conflict-title">🔍 ${p.purpConflicts.length} sobreposição(ões) de propósito</div>
+      <div class="purpose-conflict-title">${p.purpConflicts.length} sobreposição(ões) de propósito</div>
       ${p.purpConflicts.map(c=>`<div class="conflict-item"><span class="conflict-tag" style="background:#fdf4ff;color:#6b21a8;border-color:#d8b4fe">${c.team}</span>
         <span class="conflict-text" style="color:#4c1d95">Similar a <strong>${c.team}</strong></span></div>`).join("")}
     </div>`;
@@ -1390,7 +1420,7 @@ function toggleApproval(unit){
   const item=document.getElementById("ap-"+unit);
   item.classList.toggle("approved",p.approvals[unit]);
   item.querySelector(".approval-toggle").style.background=p.approvals[unit]?"var(--green)":"#94a3b8";
-  item.querySelector(".approval-toggle").textContent=p.approvals[unit]?"✓ Aprovado":"Pendente";
+  item.querySelector(".approval-toggle").textContent=p.approvals[unit]?"Aprovado":"Pendente";
 }
 
 function renderComments(){
@@ -1415,7 +1445,7 @@ function saveDetail(){
 }
 
 function sendEmail(){
-  showToast("📧 Notificação enviada para todas as equipes!");
+  showToast("Notificação enviada para todas as equipes!");
 }
 
 // ═══════════════ INIT ═══════════════
